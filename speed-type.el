@@ -92,16 +92,26 @@ Accuracy:\t%.2f
 (defvar speed-type--gb-url-format
   "https://www.gutenberg.org/cache/epub/%d/pg%d.txt")
 
+(defvar speed-type--gb-book-list '(1790 1332 1140 868 698 658 645 629 616 613
+					597 549 537 527 523 517 486 486 486 464 457
+					454 447 431))
+
 (defun speed-type--gb-url (book-num)
   (format speed-type--gb-url-format book-num book-num))
 
 (defun speed-type--gb-retrieve (book-num)
-  (interactive "nEnter book number: ")
-  (let* ((url-request-method "GET"))
-    (url-retrieve (speed-type--gb-url book-num)
-                  (lambda (status)
-                    (switch-to-buffer (current-buffer))
-                    (delete-trailing-whitespace)))))
+  (let* ((dr (locate-user-emacs-file (format "speed-type")))
+	 (fn (locate-user-emacs-file (format "speed-type/%d.txt" book-num)))
+	 (url-request-method "GET"))
+    (if (file-readable-p fn)
+	(find-file-noselect fn t)
+      (let* ((buf (url-retrieve-synchronously (speed-type--gb-url book-num))))
+	(with-current-buffer buf
+	  (delete-trailing-whitespace)
+	  (when (not (file-exists-p dr))
+	    (make-directory dr))
+	  (write-file fn)
+	  buf)))))
 
 (defvar speed-type--start-time nil)
 (make-variable-buffer-local 'speed-type--start-time)
@@ -244,6 +254,18 @@ takes place. TEXT is copied into that new buffer."
   "Open copy of buffer contents in a new buffer to speed type the text"
   (interactive)
   (speed-type--setup (buffer-substring (point-min) (point-max))))
+
+(defun speed-type-paragraph ()
+  (interactive)
+  (let* ((rand-num (random (length speed-type--gb-book-list)))
+	 (book-num (nth rand-num speed-type--gb-book-list))
+	 (paragraph-num (+ 20 (random 200))))
+    (with-current-buffer (speed-type--gb-retrieve book-num)
+      (goto-char 0)
+      (dotimes (i paragraph-num nil)
+	(forward-paragraph))
+      (mark-paragraph)
+      (speed-type-region (region-beginning) (region-end)))))
 
 ;;; tests
 
