@@ -109,12 +109,12 @@ Total errors:\t%d
 
 (defun speed-type--gb-retrieve (book-num)
   "Speed-type--gb-retrieve returns buffer with book number BOOK-NUM in it."
-  (let* ((dr (locate-user-emacs-file (format "speed-type")))
-         (fn (locate-user-emacs-file (format "speed-type/%d.txt" book-num)))
-         (url-request-method "GET"))
+  (let ((dr (locate-user-emacs-file (format "speed-type")))
+        (fn (locate-user-emacs-file (format "speed-type/%d.txt" book-num)))
+        (url-request-method "GET"))
     (if (file-readable-p fn)
         (find-file-noselect fn t)
-      (let* ((buf (url-retrieve-synchronously (speed-type--gb-url book-num))))
+      (let ((buf (url-retrieve-synchronously (speed-type--gb-url book-num))))
         (with-current-buffer buf
           (delete-trailing-whitespace)
           (when (not (file-exists-p dr))
@@ -145,15 +145,15 @@ Total errors:\t%d
 
 (defun speed-type--elapsed-time ()
   "Speed-type--lapsed-time returns a float with the total time since start."
-  (let* ((end-time (float-time)))
+  (let ((end-time (float-time)))
     (if (not speed-type--start-time)
         0 (- end-time speed-type--start-time))))
 
 (defun speed-type--check-same (pos a b)
   "Speed-type--check-same returns true iff either both characters are
 white space or if the are the same."
-  (let* ((q (aref a pos))
-         (p (aref b pos)))
+  (let ((q (aref a pos))
+        (p (aref b pos)))
     (or (and (= (char-syntax p) ?\s)
              (= (char-syntax q) ?\s))
         (= p q))))
@@ -188,12 +188,12 @@ and prints statistics"
 
 (defun speed-type--diff (orig new start end)
   "Updates stats and buffer contents with result of changes in text."
-  (let* ((start0 (1- start))
-         (end0 (1- end))
-         (color nil))
+  (let ((start0 (1- start))
+        (end0 (1- end))
+        (color nil))
     (dotimes (i (- end start) nil)
-      (let* ((pos0 (+ start0 i))
-             (pos (+ start i)))
+      (let ((pos0 (+ start0 i))
+            (pos (+ start i)))
         (if (speed-type--check-same i orig new)
             (progn (setq color "green")
                    (store-substring speed-type--mod-str pos0 1))
@@ -289,7 +289,7 @@ takes place. TEXT is copied into that new buffer."
           (setq fwd (not fwd))))
       (mark-paragraph)
       (while (> tries 0)
-        (let* ((size (- (mark) (point))))
+        (let ((size (- (mark) (point))))
           (cond ((< size speed-type--min-chars) (backward-paragraph))
                 ((> size speed-type--max-chars) (search-forward "." (mark) t))
                 (t (setq done t))))
