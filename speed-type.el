@@ -87,14 +87,14 @@ Total errors:\t%d
   (format speed-type-stats-format
           (speed-type--skill (speed-type--net-wpm num-entries num-errors seconds))
           (speed-type--net-wpm num-entries num-errors seconds)
-	  (speed-type--net-cpm num-entries num-errors seconds)
-	  (speed-type--gross-wpm num-entries seconds)
-	  (speed-type--gross-cpm num-entries seconds)
+          (speed-type--net-cpm num-entries num-errors seconds)
+          (speed-type--gross-wpm num-entries seconds)
+          (speed-type--gross-cpm num-entries seconds)
           (speed-type--accuracy num-entries (- num-entries num-errors) num-corrections)
-	  (format-seconds "%M %z%S" seconds)
-	  num-entries
-	  num-corrections
-	  (+ num-errors num-corrections)
+          (format-seconds "%M %z%S" seconds)
+          num-entries
+          num-corrections
+          (+ num-errors num-corrections)
           speed-type-explaining-message))
 
 (defvar speed-type--gb-url-format
@@ -102,7 +102,7 @@ Total errors:\t%d
 
 (defvar speed-type--gb-book-list
   '(1342 76 11 1952 1661 74 1232 23 135 5200 2591 844 84 98 2701 1400 16328 174
-	 46 4300 345 1080 2500 829 1260 6130 1184 768 32032 521 1399 55))
+         46 4300 345 1080 2500 829 1260 6130 1184 768 32032 521 1399 55))
 
 (defun speed-type--gb-url (book-num)
   (format speed-type--gb-url-format book-num book-num))
@@ -264,17 +264,36 @@ takes place. TEXT is copied into that new buffer."
   (interactive)
   (speed-type--setup (buffer-substring (point-min) (point-max))))
 
+(defvar speed-type--min-chars 200)
+(defvar speed-type--max-chars 600)
+(defvar speed-type--skip-paragraphs 20)
+(defvar speed-type--max-paragraphs 200)
+
 (defun speed-type-text ()
   "Setup a new text sample to practice touch or speed typing."
   (interactive)
   (let* ((rand-num (random (length speed-type--gb-book-list)))
          (book-num (nth rand-num speed-type--gb-book-list))
-         (paragraph-num (+ 20 (random 200))))
+         (paragraph-num (+ speed-type--skip-paragraphs
+                           (random speed-type--max-paragraphs)))
+         (fwd t)
+         (p (point))
+         (tries 10))
     (with-current-buffer (speed-type--gb-retrieve book-num)
       (goto-char 0)
       (dotimes (i paragraph-num nil)
-        (forward-paragraph))
+        (setq p (point))
+        (if fwd (forward-paragraph)
+          (backward-paragraph))
+        (when (= p (point))
+          (setq fwd (not fwd))))
       (mark-paragraph)
+      (while (> tries 0)
+        (let* ((size (- (mark) (point))))
+          (cond ((< size speed-type--min-chars) (backward-paragraph))
+                ((> size speed-type--max-chars) (search-forward "." (mark) t))
+                (t (setq done t))))
+        (decf tries))
       (speed-type-region (region-beginning) (region-end)))))
 
 ;;; tests
