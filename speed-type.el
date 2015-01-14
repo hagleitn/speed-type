@@ -72,46 +72,55 @@ of effective or net speed.")
 
 (defvar speed-type-stats-format "\n
 Skill:\t\t%s
-Gross WPM:\t%d
 Net WPM:\t%d
-Gross CPM:\t%d
 Net CPM:\t%d
-Accuracy:\t%.2f
+Gross WPM:\t%d
+Gross CPM:\t%d
+Accuracy:\t%.2f%%
+Total time:\t%s
+Total chars:\t%d
+Corrections:\t%d
+Total errors:\t%d
 %s")
 
 (defun speed-type--generate-stats (num-entries num-errors num-corrections seconds)
   (format speed-type-stats-format
           (speed-type--skill (speed-type--net-wpm num-entries num-errors seconds))
-          (speed-type--gross-wpm num-entries seconds)
           (speed-type--net-wpm num-entries num-errors seconds)
-          (speed-type--gross-cpm num-entries seconds)
-          (speed-type--net-cpm num-entries num-errors seconds)
+	  (speed-type--net-cpm num-entries num-errors seconds)
+	  (speed-type--gross-wpm num-entries seconds)
+	  (speed-type--gross-cpm num-entries seconds)
           (speed-type--accuracy num-entries (- num-entries num-errors) num-corrections)
+	  (format-seconds "%M %z%S" seconds)
+	  num-entries
+	  num-corrections
+	  (+ num-errors num-corrections)
           speed-type-explaining-message))
 
 (defvar speed-type--gb-url-format
   "https://www.gutenberg.org/cache/epub/%d/pg%d.txt")
 
-(defvar speed-type--gb-book-list '(1790 1332 1140 868 698 658 645 629 616 613
-					597 549 537 527 523 517 486 486 486 464 457
-					454 447 431))
+(defvar speed-type--gb-book-list
+  '(1342 76 11 1952 1661 74 1232 23 135 5200 2591 844 84 98 2701 1400 16328 174
+	 46 4300 345 1080 2500 829 1260 6130 1184 768 32032 521 1399 55))
 
 (defun speed-type--gb-url (book-num)
   (format speed-type--gb-url-format book-num book-num))
 
 (defun speed-type--gb-retrieve (book-num)
+  "Speed-type--gb-retrieve returns buffer with book number BOOK-NUM in it."
   (let* ((dr (locate-user-emacs-file (format "speed-type")))
-	 (fn (locate-user-emacs-file (format "speed-type/%d.txt" book-num)))
-	 (url-request-method "GET"))
+         (fn (locate-user-emacs-file (format "speed-type/%d.txt" book-num)))
+         (url-request-method "GET"))
     (if (file-readable-p fn)
-	(find-file-noselect fn t)
+        (find-file-noselect fn t)
       (let* ((buf (url-retrieve-synchronously (speed-type--gb-url book-num))))
-	(with-current-buffer buf
-	  (delete-trailing-whitespace)
-	  (when (not (file-exists-p dr))
-	    (make-directory dr))
-	  (write-file fn)
-	  buf)))))
+        (with-current-buffer buf
+          (delete-trailing-whitespace)
+          (when (not (file-exists-p dr))
+            (make-directory dr))
+          (write-file fn)
+          buf)))))
 
 (defvar speed-type--start-time nil)
 (make-variable-buffer-local 'speed-type--start-time)
@@ -203,7 +212,7 @@ coded and stats are gathered about the typing performance."
          (end0 (1- end))
          (new-text (buffer-substring start end))
          (old-text (substring speed-type--orig-text
-			      start0 (+ start0 length)))
+                              start0 (+ start0 length)))
          (orig (substring speed-type--orig-text start0 end0)))
     (speed-type--handle-del start end)
     (insert old-text)
@@ -229,7 +238,7 @@ coded and stats are gathered about the typing performance."
 takes place. TEXT is copied into that new buffer."
   (let* ((speed-type--buffer (generate-new-buffer "speed-type"))
          (text (speed-type--chomp text))
-	 (len (length text)))
+         (len (length text)))
     (set-buffer speed-type--buffer)
     (setq speed-type--orig-text text)
     (setq speed-type--mod-str (make-string len 0))
@@ -258,12 +267,12 @@ takes place. TEXT is copied into that new buffer."
 (defun speed-type-paragraph ()
   (interactive)
   (let* ((rand-num (random (length speed-type--gb-book-list)))
-	 (book-num (nth rand-num speed-type--gb-book-list))
-	 (paragraph-num (+ 20 (random 200))))
+         (book-num (nth rand-num speed-type--gb-book-list))
+         (paragraph-num (+ 20 (random 200))))
     (with-current-buffer (speed-type--gb-retrieve book-num)
       (goto-char 0)
       (dotimes (i paragraph-num nil)
-	(forward-paragraph))
+        (forward-paragraph))
       (mark-paragraph)
       (speed-type-region (region-beginning) (region-end)))))
 
@@ -294,7 +303,7 @@ takes place. TEXT is copied into that new buffer."
 
   (defun speed-type--chomp-tests ()
     (assert (string= "foo\n\t\sbar"
-		     (speed-type--chomp "\s\n\tfoo\n\t\sbar\n\t\s"))))
+                     (speed-type--chomp "\s\n\tfoo\n\t\sbar\n\t\s"))))
   (speed-type--chomp-tests))
 
 (provide 'speed-type)
