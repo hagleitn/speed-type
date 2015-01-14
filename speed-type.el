@@ -3,9 +3,9 @@
 ;; Copyright 2015 Gunther Hagleitner
 
 ;; Author: Gunther Hagleitner
-;; Keywords: TODO
-;; URL: TODO
-;; Package-Requires: ()
+;; Version: 1.0.0
+;; Keywords: games, tools
+;; URL: https://github.com/hagleitn/speed-type
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -25,8 +25,8 @@
 ;;; Commentary:
 ;;
 ;; This allows you to practice your touch typing skills on any buffer
-;; or region. You can also type random samples from
-;; ebooks. speed-type also keeps track of your stats (WPM, CPM, etc)
+;; or region. You can also type random samples from ebooks. speed-type
+;; also keeps track of your stats (WPM, CPM, etc)
 
 ;;; Code:
 
@@ -264,7 +264,8 @@ takes place. TEXT is copied into that new buffer."
   (interactive)
   (speed-type--setup (buffer-substring (point-min) (point-max))))
 
-(defun speed-type-paragraph ()
+(defun speed-type-text ()
+  "Setup a new text sample to practice touch or speed typing."
   (interactive)
   (let* ((rand-num (random (length speed-type--gb-book-list)))
          (book-num (nth rand-num speed-type--gb-book-list))
