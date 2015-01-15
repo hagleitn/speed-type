@@ -5,7 +5,7 @@ Practice touch/speed typing in emacs
 
 Put speed-type.el into a directory specified by the load-path variable. Alternatively, you can also add a directory to the variable load-path by (add-to-list 'load-path "ADDITIONAL-DIRECTORY").
 
-If you put the file in "~/.emacs.d/speed-type/speed-type.el" for instance, the following snipped in your .emacs file will load and init the extension. 
+If you put the file in "~/.emacs.d/speed-type/speed-type.el" for instance, the following snipped in your .emacs file will load and init the extension.
 
 ```lisp
 (add-to-list 'load-path "~/.emacs.d/speed-type/speed-type.el")
