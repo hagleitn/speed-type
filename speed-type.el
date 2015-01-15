@@ -1,9 +1,9 @@
 ;;; speed-type.el --- Practice touch and speed typing
 
-;; Copyright 2015 Gunther Hagleitner
+;; Copyright (C) 2015 Gunther Hagleitner
 
 ;; Author: Gunther Hagleitner
-;; Version: 1.0.0
+;; Version: 0.1
 ;; Keywords: games, tools
 ;; URL: https://github.com/hagleitn/speed-type
 
@@ -43,14 +43,16 @@
   (round (/ num-entries (speed-type--seconds-to-minutes seconds))))
 
 (defun speed-type--net-wpm (num-entries uncorrected-errors seconds)
-  (round (- (speed-type--gross-wpm num-entries seconds)
-            (/ uncorrected-errors
-               (speed-type--seconds-to-minutes seconds)))))
+  (let ((net-wpm (round (- (speed-type--gross-wpm num-entries seconds)
+			   (/ uncorrected-errors
+			      (speed-type--seconds-to-minutes seconds))))))
+    (if (> 0 net-wpm) 0 net-wpm)))
 
 (defun speed-type--net-cpm (num-entries uncorrected-errors seconds)
-  (round (- (speed-type--gross-cpm num-entries seconds)
-            (/ uncorrected-errors
-               (speed-type--seconds-to-minutes seconds)))))
+  (let ((net-cpm (round (- (speed-type--gross-cpm num-entries seconds)
+			   (/ uncorrected-errors
+			      (speed-type--seconds-to-minutes seconds))))))
+    (if (> 0 net-cpm) 0 net-cpm)))
 
 (defun speed-type--accuracy (total-entries correct-entries corrections)
   (let* ((correct-entries (- correct-entries corrections))
@@ -67,7 +69,7 @@
 
 (defvar speed-type-explaining-message "\n
 Gross wpm/cpm ignore uncorrected errors and indicate raw speed.
-Net wpm/cmp take uncorrected errors into account and are a measure
+Net wpm/cpm take uncorrected errors into account and are a measure
 of effective or net speed.")
 
 (defvar speed-type-stats-format "\n
@@ -177,8 +179,8 @@ occurs in the buffer."
 (defun speed-type--handle-complete ()
   "Speed-type--handle-complete removes typing hooks from the buffer
 and prints statistics"
-  (remove-hook 'after-change-functions 'change)
-  (remove-hook 'first-change-hook 'first-change)
+  (remove-hook 'after-change-functions 'speed-type--change)
+  (remove-hook 'first-change-hook 'speed-type--first-change)
   (goto-char (point-max))
   (insert (speed-type--generate-stats
            speed-type--num-entries
@@ -208,7 +210,10 @@ and prints statistics"
   "Speed-Type--change handles buffer changes. It makes sure that the
 contents don't actually change, but rather the contents are color
 coded and stats are gathered about the typing performance."
-  (let* ((start0 (1- start))
+  (let* ((len (length speed-type--orig-text))
+	 (start (if (> start len) len start))
+	 (end (if (> end (1+ len)) len end))
+	 (start0 (1- start))
          (end0 (1- end))
          (new-text (buffer-substring start end))
          (old-text (substring speed-type--orig-text
@@ -236,17 +241,17 @@ coded and stats are gathered about the typing performance."
 (defun speed-type--setup (text)
   "Speed-type--setup set's up a new buffer in which the typing excercise
 takes place. TEXT is copied into that new buffer."
-  (let* ((speed-type--buffer (generate-new-buffer "speed-type"))
+  (let* ((buf (generate-new-buffer "speed-type"))
          (text (speed-type--chomp text))
          (len (length text)))
-    (set-buffer speed-type--buffer)
+    (set-buffer buf)
     (setq speed-type--orig-text text)
     (setq speed-type--mod-str (make-string len 0))
     (setq speed-type--num-remaining (length text))
     (erase-buffer)
     (insert speed-type--orig-text)
     (not-modified)
-    (switch-to-buffer speed-type--buffer)
+    (switch-to-buffer buf)
     (goto-char 0)
     (make-local-variable 'after-change-functions)
     (make-local-variable 'first-change-hook)
@@ -265,7 +270,7 @@ takes place. TEXT is copied into that new buffer."
   (speed-type--setup (buffer-substring (point-min) (point-max))))
 
 (defvar speed-type--min-chars 200)
-(defvar speed-type--max-chars 600)
+(defvar speed-type--max-chars 400)
 (defvar speed-type--skip-paragraphs 20)
 (defvar speed-type--max-paragraphs 200)
 
@@ -288,11 +293,12 @@ takes place. TEXT is copied into that new buffer."
         (when (= p (point))
           (setq fwd (not fwd))))
       (mark-paragraph)
+      (exchange-point-and-mark)
       (while (> tries 0)
-        (let ((size (- (mark) (point))))
-          (cond ((< size speed-type--min-chars) (backward-paragraph))
-                ((> size speed-type--max-chars) (search-forward "." (mark) t))
-                (t (setq done t))))
+        (let ((size (- (point) (mark))))
+          (cond ((< size speed-type--min-chars) (forward-paragraph))
+                ((> size speed-type--max-chars) (search-backward "." (mark) t))
+                (t (setq tries 0))))
         (decf tries))
       (speed-type-region (region-beginning) (region-end)))))
 
