@@ -210,21 +210,22 @@ and prints statistics"
   "Speed-Type--change handles buffer changes. It makes sure that the
 contents don't actually change, but rather the contents are color
 coded and stats are gathered about the typing performance."
-  (let* ((len (length speed-type--orig-text))
-	 (start (if (> start len) len start))
-	 (end (if (> end (1+ len)) len end))
-	 (start0 (1- start))
-         (end0 (1- end))
-         (new-text (buffer-substring start end))
-         (old-text (substring speed-type--orig-text
-                              start0 (+ start0 length)))
-         (orig (substring speed-type--orig-text start0 end0)))
-    (speed-type--handle-del start end)
-    (insert old-text)
-    (speed-type--diff orig new-text start end)
-    (goto-char end)
-    (when (= speed-type--num-remaining 0)
-      (speed-type--handle-complete))))
+  (let ((len (length speed-type--orig-text)))
+    (when (<= start len)
+      (let* ((end (if (> end (1+ len)) len end))
+	     (length (if (> (+ start length) len) (1+ (- len start)) length))
+	     (start0 (1- start))
+	     (end0 (1- end))
+	     (new-text (buffer-substring start end))
+	     (old-text (substring speed-type--orig-text
+				  start0 (+ start0 length)))
+	     (orig (substring speed-type--orig-text start0 end0)))
+	(speed-type--handle-del start end)
+	(insert old-text)
+	(speed-type--diff orig new-text start end)
+	(goto-char end)
+	(when (= speed-type--num-remaining 0)
+	  (speed-type--handle-complete))))))
 
 (defun speed-type--first-change ()
   "Speed-type--first-change starts the timer."
