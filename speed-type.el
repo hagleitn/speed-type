@@ -238,11 +238,21 @@ coded and stats are gathered about the typing performance."
                             ""
                             str))
 
+(defun speed-type--rtrim (str)
+  "Speed-type--chomp leading and tailing whitespace from STR."
+  (replace-regexp-in-string (rx (: (* (any " \t\n")) eos))
+                            ""
+                            str))
+
 (defun speed-type--setup (text)
   "Speed-type--setup set's up a new buffer in which the typing excercise
 takes place. TEXT is copied into that new buffer."
+  (with-temp-buffer
+    (insert text)
+    (delete-trailing-whitespace)
+    (setq text (buffer-string)))
   (let* ((buf (generate-new-buffer "speed-type"))
-         (text (speed-type--chomp text))
+         (text (speed-type--rtrim text))
          (len (length text)))
     (set-buffer buf)
     (setq speed-type--orig-text text)
@@ -329,7 +339,9 @@ takes place. TEXT is copied into that new buffer."
 
   (defun speed-type--chomp-tests ()
     (assert (string= "foo\n\t\sbar"
-                     (speed-type--chomp "\s\n\tfoo\n\t\sbar\n\t\s"))))
+                     (speed-type--chomp "\s\n\tfoo\n\t\sbar\n\t\s")))
+    (assert (string= "\s\n\tfoo\n\t\sbar"
+                     (speed-type--rtrim "\s\n\tfoo\n\t\sbar\n\t\s"))))
   (speed-type--chomp-tests))
 
 (provide 'speed-type)
