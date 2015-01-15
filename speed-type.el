@@ -44,14 +44,14 @@
 
 (defun speed-type--net-wpm (num-entries uncorrected-errors seconds)
   (let ((net-wpm (round (- (speed-type--gross-wpm num-entries seconds)
-			   (/ uncorrected-errors
-			      (speed-type--seconds-to-minutes seconds))))))
+                           (/ uncorrected-errors
+                              (speed-type--seconds-to-minutes seconds))))))
     (if (> 0 net-wpm) 0 net-wpm)))
 
 (defun speed-type--net-cpm (num-entries uncorrected-errors seconds)
   (let ((net-cpm (round (- (speed-type--gross-cpm num-entries seconds)
-			   (/ uncorrected-errors
-			      (speed-type--seconds-to-minutes seconds))))))
+                           (/ uncorrected-errors
+                              (speed-type--seconds-to-minutes seconds))))))
     (if (> 0 net-cpm) 0 net-cpm)))
 
 (defun speed-type--accuracy (total-entries correct-entries corrections)
@@ -213,19 +213,19 @@ coded and stats are gathered about the typing performance."
   (let ((len (length speed-type--orig-text)))
     (when (<= start len)
       (let* ((end (if (> end (1+ len)) len end))
-	     (length (if (> (+ start length) len) (1+ (- len start)) length))
-	     (start0 (1- start))
-	     (end0 (1- end))
-	     (new-text (buffer-substring start end))
-	     (old-text (substring speed-type--orig-text
-				  start0 (+ start0 length)))
-	     (orig (substring speed-type--orig-text start0 end0)))
-	(speed-type--handle-del start end)
-	(insert old-text)
-	(speed-type--diff orig new-text start end)
-	(goto-char end)
-	(when (= speed-type--num-remaining 0)
-	  (speed-type--handle-complete))))))
+             (length (if (> (+ start length) len) (1+ (- len start)) length))
+             (start0 (1- start))
+             (end0 (1- end))
+             (new-text (buffer-substring start end))
+             (old-text (substring speed-type--orig-text
+                                  start0 (+ start0 length)))
+             (orig (substring speed-type--orig-text start0 end0)))
+        (speed-type--handle-del start end)
+        (insert old-text)
+        (speed-type--diff orig new-text start end)
+        (goto-char end)
+        (when (= speed-type--num-remaining 0)
+          (speed-type--handle-complete))))))
 
 (defun speed-type--first-change ()
   "Speed-type--first-change starts the timer."
@@ -235,6 +235,13 @@ coded and stats are gathered about the typing performance."
 (defun speed-type--chomp (str)
   "Speed-type--chomp leading and tailing whitespace from STR."
   (replace-regexp-in-string (rx (or (: bos (* (any " \t\n")))
+                                    (: (* (any " \t\n")) eos)))
+                            ""
+                            str))
+
+(defun speed-type--trim (str)
+  "Speed-type--chomp leading and tailing whitespace from STR."
+  (replace-regexp-in-string (rx (or (: bos (* (any "\n")))
                                     (: (* (any " \t\n")) eos)))
                             ""
                             str))
@@ -253,7 +260,7 @@ takes place. TEXT is copied into that new buffer."
     (delete-trailing-whitespace)
     (setq text (buffer-string)))
   (let* ((buf (generate-new-buffer "speed-type"))
-         (text (speed-type--rtrim text))
+         (text (speed-type--trim text))
          (len (length text)))
     (set-buffer buf)
     (setq speed-type--orig-text text)
@@ -308,7 +315,8 @@ takes place. TEXT is copied into that new buffer."
       (while (> tries 0)
         (let ((size (- (point) (mark))))
           (cond ((< size speed-type--min-chars) (forward-paragraph))
-                ((> size speed-type--max-chars) (search-backward "." (mark) t))
+                ((> size speed-type--max-chars) (when (search-backward "." (mark) t)
+                                                  (forward-char)))
                 (t (setq tries 0))))
         (decf tries))
       (speed-type-region (region-beginning) (region-end)))))
