@@ -346,10 +346,10 @@ takes place. TEXT is copied into that new buffer."
 
   (defun speed-type--trim-tests ()
     (cl-assert (string= "foo\n\t\sbar"
-                        (speed-type--trim "\n\nfoo\n\t\sbar\n\t\s")))
+                        (speed-type--trim "\n\nfoo\n\t\sbar\n\n\n")))
     (cl-assert (string= "\tfoo\n\t\sbar"
-                        (speed-type--trim "\n\tfoo\n\t\sbar\n\t\s"))))
-  (speed-type--chomp-tests))
+                        (speed-type--trim "\n\tfoo\n\t\sbar\n\n\n\n"))))
+  (speed-type--trim-tests))
 
 (provide 'speed-type)
 
