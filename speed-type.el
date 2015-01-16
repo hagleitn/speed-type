@@ -234,23 +234,10 @@ coded and stats are gathered about the typing performance."
   (when (not speed-type--start-time)
     (setq speed-type--start-time (float-time))))
 
-(defun speed-type--chomp (str)
-  "Speed-type--chomp leading and tailing whitespace from STR."
-  (replace-regexp-in-string (rx (or (: bos (* (any " \t\n")))
-                                    (: (* (any " \t\n")) eos)))
-                            ""
-                            str))
-
 (defun speed-type--trim (str)
-  "Speed-type--chomp leading and tailing whitespace from STR."
+  "Speed-type--trim leading and tailing whitespace from STR."
   (replace-regexp-in-string (rx (or (: bos (* (any "\n")))
                                     (: (* (any " \t\n")) eos)))
-                            ""
-                            str))
-
-(defun speed-type--rtrim (str)
-  "Speed-type--chomp leading and tailing whitespace from STR."
-  (replace-regexp-in-string (rx (: (* (any " \t\n")) eos))
                             ""
                             str))
 
@@ -357,11 +344,11 @@ takes place. TEXT is copied into that new buffer."
     (cl-assert (not (speed-type--check-same 2 "\nfoo\s" "\nfxo\n"))))
   (speed-type--charfun-tests)
 
-  (defun speed-type--chomp-tests ()
+  (defun speed-type--trim-tests ()
     (cl-assert (string= "foo\n\t\sbar"
-                        (speed-type--chomp "\s\n\tfoo\n\t\sbar\n\t\s")))
-    (cl-assert (string= "\s\n\tfoo\n\t\sbar"
-                        (speed-type--rtrim "\s\n\tfoo\n\t\sbar\n\t\s"))))
+                        (speed-type--trim "\n\nfoo\n\t\sbar\n\t\s")))
+    (cl-assert (string= "\tfoo\n\t\sbar"
+                        (speed-type--trim "\n\tfoo\n\t\sbar\n\t\s"))))
   (speed-type--chomp-tests))
 
 (provide 'speed-type)
