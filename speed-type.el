@@ -285,11 +285,13 @@ are color coded and stats are gathered about the typing performance."
     (add-hook 'first-change-hook 'speed-type--first-change)
     (message "Timer will start when you type the first character.")))
 
+;;;###autoload
 (defun speed-type-region (start end)
   "Open copy of [START,END] in a new buffer to speed type the text."
   (interactive "r")
   (speed-type--setup (buffer-substring start end)))
 
+;;;###autoload
 (defun speed-type-buffer ()
   "Open copy of buffer contents in a new buffer to speed type the text."
   (interactive)
@@ -300,6 +302,7 @@ are color coded and stats are gathered about the typing performance."
 (defvar speed-type--skip-paragraphs 30)
 (defvar speed-type--max-paragraphs 200)
 
+;;;###autoload
 (defun speed-type-text ()
   "Setup a new text sample to practice touch or speed typing."
   (interactive)
