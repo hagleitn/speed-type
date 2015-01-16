@@ -105,7 +105,7 @@ Total errors:\t%d
   "https://www.gutenberg.org/cache/epub/%d/pg%d.txt")
 
 (defvar speed-type--gb-book-list
-  '(1342 76 11 1952 1661 74 1232 23 135 5200 2591 844 84 98 2701 1400 16328 174
+  '(1342 11 1952 1661 74 1232 23 135 5200 2591 844 84 98 2701 1400 16328 174
          46 4300 345 1080 2500 829 1260 6130 1184 768 32032 521 1399 55))
 
 (defun speed-type--gb-url (book-num)
@@ -290,8 +290,8 @@ takes place. TEXT is copied into that new buffer."
   (speed-type--setup (buffer-substring (point-min) (point-max))))
 
 (defvar speed-type--min-chars 200)
-(defvar speed-type--max-chars 400)
-(defvar speed-type--skip-paragraphs 20)
+(defvar speed-type--max-chars 450)
+(defvar speed-type--skip-paragraphs 30)
 (defvar speed-type--max-paragraphs 200)
 
 (defun speed-type-text ()
@@ -303,7 +303,7 @@ takes place. TEXT is copied into that new buffer."
                            (random speed-type--max-paragraphs)))
          (fwd t)
          (p (point))
-         (tries 10))
+         (tries 20))
     (with-current-buffer (speed-type--gb-retrieve book-num)
       (goto-char 0)
       (dotimes (i paragraph-num nil)
@@ -314,13 +314,22 @@ takes place. TEXT is copied into that new buffer."
           (setq fwd (not fwd))))
       (mark-paragraph)
       (exchange-point-and-mark)
+      (setq fwd nil)
       (while (> tries 0)
         (let ((size (- (point) (mark))))
-          (cond ((< size speed-type--min-chars) (forward-paragraph))
-                ((> size speed-type--max-chars) (when (search-backward "." (mark) t)
-                                                  (forward-char)))
-                (t (setq tries 0))))
+          (cond ((< size speed-type--min-chars)
+                 (progn (forward-paragraph)
+                        (when fwd
+                          (forward-paragraph)
+                          (mark-paragraph)
+                          (exchange-point-and-mark))
+                        (setq fwd nil)))
+                ((> size speed-type--max-chars)
+                 (progn (search-backward "." (mark) t)
+                        (setq fwd t)))
+                (t (setq tries 1))))
         (cl-decf tries))
+      (when fwd (forward-char))
       (speed-type-region (region-beginning) (region-end)))))
 
 ;;; tests
@@ -338,7 +347,7 @@ takes place. TEXT is copied into that new buffer."
 
   (defun speed-type--url-tests ()
     (cl-assert (string= "https://www.gutenberg.org/cache/epub/1/pg1.txt"
-                     (speed-type--gb-url 1))))
+                        (speed-type--gb-url 1))))
   (speed-type--url-tests)
 
   (defun speed-type--charfun-tests ()
@@ -350,9 +359,9 @@ takes place. TEXT is copied into that new buffer."
 
   (defun speed-type--chomp-tests ()
     (cl-assert (string= "foo\n\t\sbar"
-                     (speed-type--chomp "\s\n\tfoo\n\t\sbar\n\t\s")))
+                        (speed-type--chomp "\s\n\tfoo\n\t\sbar\n\t\s")))
     (cl-assert (string= "\s\n\tfoo\n\t\sbar"
-                     (speed-type--rtrim "\s\n\tfoo\n\t\sbar\n\t\s"))))
+                        (speed-type--rtrim "\s\n\tfoo\n\t\sbar\n\t\s"))))
   (speed-type--chomp-tests))
 
 (provide 'speed-type)
