@@ -37,21 +37,21 @@
 (defun speed-type--seconds-to-minutes (seconds)
   (/ seconds 60.0))
 
-(defun speed-type--gross-wpm (num-entries seconds)
-  (round (/ (/ num-entries 5.0)
+(defun speed-type--gross-wpm (entries seconds)
+  (round (/ (/ entries 5.0)
             (speed-type--seconds-to-minutes seconds))))
 
-(defun speed-type--gross-cpm (num-entries seconds)
-  (round (/ num-entries (speed-type--seconds-to-minutes seconds))))
+(defun speed-type--gross-cpm (entries seconds)
+  (round (/ entries (speed-type--seconds-to-minutes seconds))))
 
-(defun speed-type--net-wpm (num-entries uncorrected-errors seconds)
-  (let ((net-wpm (round (- (speed-type--gross-wpm num-entries seconds)
+(defun speed-type--net-wpm (entries uncorrected-errors seconds)
+  (let ((net-wpm (round (- (speed-type--gross-wpm entries seconds)
                            (/ uncorrected-errors
                               (speed-type--seconds-to-minutes seconds))))))
     (if (> 0 net-wpm) 0 net-wpm)))
 
-(defun speed-type--net-cpm (num-entries uncorrected-errors seconds)
-  (let ((net-cpm (round (- (speed-type--gross-cpm num-entries seconds)
+(defun speed-type--net-cpm (entries uncorrected-errors seconds)
+  (let ((net-cpm (round (- (speed-type--gross-cpm entries seconds)
                            (/ uncorrected-errors
                               (speed-type--seconds-to-minutes seconds))))))
     (if (> 0 net-cpm) 0 net-cpm)))
@@ -87,18 +87,18 @@ Corrections:\t%d
 Total errors:\t%d
 %s")
 
-(defun speed-type--generate-stats (num-entries num-errors num-corrections seconds)
+(defun speed-type--generate-stats (entries errors corrections seconds)
   (format speed-type-stats-format
-          (speed-type--skill (speed-type--net-wpm num-entries num-errors seconds))
-          (speed-type--net-wpm num-entries num-errors seconds)
-          (speed-type--net-cpm num-entries num-errors seconds)
-          (speed-type--gross-wpm num-entries seconds)
-          (speed-type--gross-cpm num-entries seconds)
-          (speed-type--accuracy num-entries (- num-entries num-errors) num-corrections)
+          (speed-type--skill (speed-type--net-wpm entries errors seconds))
+          (speed-type--net-wpm entries errors seconds)
+          (speed-type--net-cpm entries errors seconds)
+          (speed-type--gross-wpm entries seconds)
+          (speed-type--gross-cpm entries seconds)
+          (speed-type--accuracy entries (- entries errors) corrections)
           (format-seconds "%M %z%S" seconds)
-          num-entries
-          num-corrections
-          (+ num-errors num-corrections)
+          entries
+          corrections
+          (+ errors corrections)
           speed-type-explaining-message))
 
 (defvar speed-type--gb-url-format
@@ -132,20 +132,20 @@ Total errors:\t%d
 (defvar speed-type--orig-text nil)
 (make-variable-buffer-local 'speed-type--orig-text)
 
-(defvar speed-type--num-entries 0)
-(make-variable-buffer-local 'speed-type--num-entries)
+(defvar speed-type--entries 0)
+(make-variable-buffer-local 'speed-type--entries)
 
-(defvar speed-type--num-errors 0)
-(make-variable-buffer-local 'speed-type--num-errors)
+(defvar speed-type--errors 0)
+(make-variable-buffer-local 'speed-type--errors)
 
-(defvar speed-type--num-remaining 0)
-(make-variable-buffer-local 'speed-type--num-remaining)
+(defvar speed-type--remaining 0)
+(make-variable-buffer-local 'speed-type--remaining)
 
 (defvar speed-type--mod-str nil)
 (make-variable-buffer-local 'speed-type--mod-str)
 
-(defvar speed-type--num-corrections 0)
-(make-variable-buffer-local 'speed-type--num-corrections)
+(defvar speed-type--corrections 0)
+(make-variable-buffer-local 'speed-type--corrections)
 
 (defun speed-type--elapsed-time ()
   "Speed-type--lapsed-time returns a float with the total time since start."
@@ -170,12 +170,12 @@ occurs in the buffer."
     (let* ((pos (+ (1- start) i))
            (q (aref speed-type--mod-str pos)))
       (cond ((= q 0) ())
-            ((= q 1) (progn (cl-decf speed-type--num-entries)
-                            (cl-incf speed-type--num-remaining)))
-            ((= q 2) (progn (cl-decf speed-type--num-entries)
-                            (cl-incf speed-type--num-remaining)
-                            (cl-decf speed-type--num-errors)
-                            (cl-incf speed-type--num-corrections))))
+            ((= q 1) (progn (cl-decf speed-type--entries)
+                            (cl-incf speed-type--remaining)))
+            ((= q 2) (progn (cl-decf speed-type--entries)
+                            (cl-incf speed-type--remaining)
+                            (cl-decf speed-type--errors)
+                            (cl-incf speed-type--corrections))))
       (store-substring speed-type--mod-str pos 0))))
 
 (defun speed-type--handle-complete ()
@@ -185,9 +185,9 @@ and prints statistics"
   (remove-hook 'first-change-hook 'speed-type--first-change)
   (goto-char (point-max))
   (insert (speed-type--generate-stats
-           speed-type--num-entries
-           speed-type--num-errors
-           speed-type--num-corrections
+           speed-type--entries
+           speed-type--errors
+           speed-type--corrections
            (speed-type--elapsed-time))))
 
 (defun speed-type--diff (orig new start end)
@@ -201,11 +201,11 @@ and prints statistics"
         (if (speed-type--check-same i orig new)
             (progn (setq color "green")
                    (store-substring speed-type--mod-str pos0 1))
-          (progn (cl-incf speed-type--num-errors)
+          (progn (cl-incf speed-type--errors)
                  (setq color "red")
                  (store-substring speed-type--mod-str pos0 2)))
-        (cl-incf speed-type--num-entries)
-        (cl-decf speed-type--num-remaining)
+        (cl-incf speed-type--entries)
+        (cl-decf speed-type--remaining)
         (add-face-text-property pos (1+ pos) `(:foreground ,color))))))
 
 (defun speed-type--change (start end length)
@@ -226,7 +226,7 @@ coded and stats are gathered about the typing performance."
         (insert old-text)
         (speed-type--diff orig new-text start end)
         (goto-char end)
-        (when (= speed-type--num-remaining 0)
+        (when (= speed-type--remaining 0)
           (speed-type--handle-complete))))))
 
 (defun speed-type--first-change ()
@@ -254,7 +254,7 @@ takes place. TEXT is copied into that new buffer."
     (set-buffer buf)
     (setq speed-type--orig-text text)
     (setq speed-type--mod-str (make-string len 0))
-    (setq speed-type--num-remaining (length text))
+    (setq speed-type--remaining (length text))
     (erase-buffer)
     (insert speed-type--orig-text)
     (not-modified)
