@@ -6,6 +6,7 @@
 ;; Version: 0.1
 ;; Keywords: games, tools
 ;; URL: https://github.com/hagleitn/speed-type
+;; Package-Requires: ((cl-lib "0.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -31,6 +32,7 @@
 ;;; Code:
 
 (require 'url)
+(require 'cl-lib)
 
 (defun speed-type--seconds-to-minutes (seconds)
   (/ seconds 60.0))
@@ -168,12 +170,12 @@ occurs in the buffer."
     (let* ((pos (+ (1- start) i))
            (q (aref speed-type--mod-str pos)))
       (cond ((= q 0) ())
-            ((= q 1) (progn (decf speed-type--num-entries)
-                            (incf speed-type--num-remaining)))
-            ((= q 2) (progn (decf speed-type--num-entries)
-                            (incf speed-type--num-remaining)
-                            (decf speed-type--num-errors)
-                            (incf speed-type--num-corrections))))
+            ((= q 1) (progn (cl-decf speed-type--num-entries)
+                            (cl-incf speed-type--num-remaining)))
+            ((= q 2) (progn (cl-decf speed-type--num-entries)
+                            (cl-incf speed-type--num-remaining)
+                            (cl-decf speed-type--num-errors)
+                            (cl-incf speed-type--num-corrections))))
       (store-substring speed-type--mod-str pos 0))))
 
 (defun speed-type--handle-complete ()
@@ -199,11 +201,11 @@ and prints statistics"
         (if (speed-type--check-same i orig new)
             (progn (setq color "green")
                    (store-substring speed-type--mod-str pos0 1))
-          (progn (incf speed-type--num-errors)
+          (progn (cl-incf speed-type--num-errors)
                  (setq color "red")
                  (store-substring speed-type--mod-str pos0 2)))
-        (incf speed-type--num-entries)
-        (decf speed-type--num-remaining)
+        (cl-incf speed-type--num-entries)
+        (cl-decf speed-type--num-remaining)
         (add-face-text-property pos (1+ pos) `(:foreground ,color))))))
 
 (defun speed-type--change (start end length)
@@ -318,38 +320,38 @@ takes place. TEXT is copied into that new buffer."
                 ((> size speed-type--max-chars) (when (search-backward "." (mark) t)
                                                   (forward-char)))
                 (t (setq tries 0))))
-        (decf tries))
+        (cl-decf tries))
       (speed-type-region (region-beginning) (region-end)))))
 
 ;;; tests
 
 (eval-when-compile
   (defun speed-type--stats-tests ()
-    (assert (= 3 (speed-type--seconds-to-minutes 180)))
-    (assert (= 30 (speed-type--gross-wpm 450 180)))
-    (assert (= 15 (speed-type--net-wpm 450 45 180)))
-    (assert (= 85 (speed-type--accuracy 100 90 5)))
-    (assert (string= "Beginner" (speed-type--skill 10)))
-    (assert (string= "Pro" (speed-type--skill 45)))
-    (assert (string= "Racer" (speed-type--skill 400))))
+    (cl-assert (= 3 (speed-type--seconds-to-minutes 180)))
+    (cl-assert (= 30 (speed-type--gross-wpm 450 180)))
+    (cl-assert (= 15 (speed-type--net-wpm 450 45 180)))
+    (cl-assert (= 85 (speed-type--accuracy 100 90 5)))
+    (cl-assert (string= "Beginner" (speed-type--skill 10)))
+    (cl-assert (string= "Pro" (speed-type--skill 45)))
+    (cl-assert (string= "Racer" (speed-type--skill 400))))
   (speed-type--stats-tests)
 
   (defun speed-type--url-tests ()
-    (assert (string= "https://www.gutenberg.org/cache/epub/1/pg1.txt"
+    (cl-assert (string= "https://www.gutenberg.org/cache/epub/1/pg1.txt"
                      (speed-type--gb-url 1))))
   (speed-type--url-tests)
 
   (defun speed-type--charfun-tests ()
-    (assert (speed-type--check-same 0 "\nfoo\n" "\nfoo\n"))
-    (assert (speed-type--check-same 1 "\nfoo\s" "\nfoo\n"))
-    (assert (speed-type--check-same 4 "\nfoo\s" "\nfoo\t"))
-    (assert (not (speed-type--check-same 2 "\nfoo\s" "\nfxo\n"))))
+    (cl-assert (speed-type--check-same 0 "\nfoo\n" "\nfoo\n"))
+    (cl-assert (speed-type--check-same 1 "\nfoo\s" "\nfoo\n"))
+    (cl-assert (speed-type--check-same 4 "\nfoo\s" "\nfoo\t"))
+    (cl-assert (not (speed-type--check-same 2 "\nfoo\s" "\nfxo\n"))))
   (speed-type--charfun-tests)
 
   (defun speed-type--chomp-tests ()
-    (assert (string= "foo\n\t\sbar"
+    (cl-assert (string= "foo\n\t\sbar"
                      (speed-type--chomp "\s\n\tfoo\n\t\sbar\n\t\s")))
-    (assert (string= "\s\n\tfoo\n\t\sbar"
+    (cl-assert (string= "\s\n\tfoo\n\t\sbar"
                      (speed-type--rtrim "\s\n\tfoo\n\t\sbar\n\t\s"))))
   (speed-type--chomp-tests))
 
