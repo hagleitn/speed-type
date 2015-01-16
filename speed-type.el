@@ -4,7 +4,7 @@
 
 ;; Author: Gunther Hagleitner
 ;; Version: 0.1
-;; Keywords: games, tools
+;; Keywords: games
 ;; URL: https://github.com/hagleitn/speed-type
 ;; Package-Requires: ((cl-lib "0.3"))
 
@@ -35,33 +35,52 @@
 (require 'cl-lib)
 
 (defun speed-type--seconds-to-minutes (seconds)
+  "Return minutes in float for SECONDS."
   (/ seconds 60.0))
 
 (defun speed-type--gross-wpm (entries seconds)
+  "Return gross words-per-minute.
+
+Computes words-per-minute as (ENTRIES/5) / (SECONDS/60)."
   (round (/ (/ entries 5.0)
             (speed-type--seconds-to-minutes seconds))))
 
 (defun speed-type--gross-cpm (entries seconds)
+  "Return gross characters-per-minute.
+
+Computes characters-per-minute as ENTRIES / (SECONDS/60)."
   (round (/ entries (speed-type--seconds-to-minutes seconds))))
 
 (defun speed-type--net-wpm (entries uncorrected-errors seconds)
+  "Return net words-per-minute.
+
+Computes net words-per-minute as:
+  ((ENTRIES/5) - UNCORRECTED-ERRORS) / (SECONDS/60)."
   (let ((net-wpm (round (- (speed-type--gross-wpm entries seconds)
                            (/ uncorrected-errors
                               (speed-type--seconds-to-minutes seconds))))))
     (if (> 0 net-wpm) 0 net-wpm)))
 
 (defun speed-type--net-cpm (entries uncorrected-errors seconds)
+  "Return net characters-per-minute.
+
+Computes net characters-per-minute as:
+  (ENTRIES - UNCORRECTED-ERRORS) / (SECONDS/60)."
   (let ((net-cpm (round (- (speed-type--gross-cpm entries seconds)
                            (/ uncorrected-errors
                               (speed-type--seconds-to-minutes seconds))))))
     (if (> 0 net-cpm) 0 net-cpm)))
 
 (defun speed-type--accuracy (total-entries correct-entries corrections)
+  "Return accuracy.
+
+Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
   (let* ((correct-entries (- correct-entries corrections))
          (correct-entries (if (> correct-entries 0) correct-entries 0)))
     (* (round (* (/ correct-entries (float total-entries)) 100.0) 0.01) 0.01)))
 
 (defun speed-type--skill (wpm)
+  "Return skill for WPM."
   (cond ((< wpm 25) "Beginner")
         ((< wpm 30) "Intermediate")
         ((< wpm 40) "Average")
@@ -88,6 +107,7 @@ Total errors:\t%d
 %s")
 
 (defun speed-type--generate-stats (entries errors corrections seconds)
+  "Return string of statistics."
   (format speed-type-stats-format
           (speed-type--skill (speed-type--net-wpm entries errors seconds))
           (speed-type--net-wpm entries errors seconds)
@@ -109,10 +129,11 @@ Total errors:\t%d
          46 4300 345 1080 2500 829 1260 6130 1184 768 32032 521 1399 55))
 
 (defun speed-type--gb-url (book-num)
+  "Return url for BOOK-NUM."
   (format speed-type--gb-url-format book-num book-num))
 
 (defun speed-type--gb-retrieve (book-num)
-  "Speed-type--gb-retrieve returns buffer with book number BOOK-NUM in it."
+  "Return buffer with book number BOOK-NUM in it."
   (let ((dr (locate-user-emacs-file (format "speed-type")))
         (fn (locate-user-emacs-file (format "speed-type/%d.txt" book-num)))
         (url-request-method "GET"))
@@ -148,14 +169,13 @@ Total errors:\t%d
 (make-variable-buffer-local 'speed-type--corrections)
 
 (defun speed-type--elapsed-time ()
-  "Speed-type--lapsed-time returns a float with the total time since start."
+  "Return float with the total time since start."
   (let ((end-time (float-time)))
     (if (not speed-type--start-time)
         0 (- end-time speed-type--start-time))))
 
 (defun speed-type--check-same (pos a b)
-  "Speed-type--check-same returns true iff either both characters are
-white space or if the are the same."
+  "Return true iff both A[POS] B[POS] are white space or if they are the same."
   (let ((q (aref a pos))
         (p (aref b pos)))
     (or (and (= (char-syntax p) ?\s)
@@ -163,8 +183,7 @@ white space or if the are the same."
         (= p q))))
 
 (defun speed-type--handle-del (start end)
-  "Speed-type--handle-del keeps track of the statistics when a deletion
-occurs in the buffer."
+  "Keep track of the statistics when a deletion occurs between START and END."
   (delete-region start end)
   (dotimes (i (- end start) nil)
     (let* ((pos (+ (1- start) i))
@@ -179,8 +198,7 @@ occurs in the buffer."
       (store-substring speed-type--mod-str pos 0))))
 
 (defun speed-type--handle-complete ()
-  "Speed-type--handle-complete removes typing hooks from the buffer
-and prints statistics"
+  "Remove typing hooks from the buffer and print statistics."
   (remove-hook 'after-change-functions 'speed-type--change)
   (remove-hook 'first-change-hook 'speed-type--first-change)
   (goto-char (point-max))
@@ -191,7 +209,7 @@ and prints statistics"
            (speed-type--elapsed-time))))
 
 (defun speed-type--diff (orig new start end)
-  "Updates stats and buffer contents with result of changes in text."
+  "Update stats and buffer contents with result of changes in text."
   (let ((start0 (1- start))
         (end0 (1- end))
         (color nil))
@@ -209,9 +227,10 @@ and prints statistics"
         (add-face-text-property pos (1+ pos) `(:foreground ,color))))))
 
 (defun speed-type--change (start end length)
-  "Speed-Type--change handles buffer changes. It makes sure that the
-contents don't actually change, but rather the contents are color
-coded and stats are gathered about the typing performance."
+  "Handle buffer changes.
+
+Make sure that the contents don't actually change, but rather the contents
+are color coded and stats are gathered about the typing performance."
   (let ((len (length speed-type--orig-text)))
     (when (<= start len)
       (let* ((end (if (> end (1+ len)) len end))
@@ -230,20 +249,19 @@ coded and stats are gathered about the typing performance."
           (speed-type--handle-complete))))))
 
 (defun speed-type--first-change ()
-  "Speed-type--first-change starts the timer."
+  "Start the timer."
   (when (not speed-type--start-time)
     (setq speed-type--start-time (float-time))))
 
 (defun speed-type--trim (str)
-  "Speed-type--trim leading and tailing whitespace from STR."
+  "Trim leading and tailing whitespace from STR."
   (replace-regexp-in-string (rx (or (: bos (* (any "\n")))
                                     (: (* (any " \t\n")) eos)))
                             ""
                             str))
 
 (defun speed-type--setup (text)
-  "Speed-type--setup set's up a new buffer in which the typing excercise
-takes place. TEXT is copied into that new buffer."
+  "Set up a new buffer for the typing exercise on TEXT."
   (with-temp-buffer
     (insert text)
     (delete-trailing-whitespace)
@@ -267,12 +285,12 @@ takes place. TEXT is copied into that new buffer."
     (message "Timer will start when you type the first character.")))
 
 (defun speed-type-region (start end)
-  "Open copy of region in a new buffer to speed type the text"
+  "Open copy of [START,END] in a new buffer to speed type the text."
   (interactive "r")
   (speed-type--setup (buffer-substring start end)))
 
 (defun speed-type-buffer ()
-  "Open copy of buffer contents in a new buffer to speed type the text"
+  "Open copy of buffer contents in a new buffer to speed type the text."
   (interactive)
   (speed-type--setup (buffer-substring (point-min) (point-max))))
 
@@ -318,38 +336,6 @@ takes place. TEXT is copied into that new buffer."
         (cl-decf tries))
       (when fwd (forward-char))
       (speed-type-region (region-beginning) (region-end)))))
-
-;;; tests
-
-(eval-when-compile
-  (defun speed-type--stats-tests ()
-    (cl-assert (= 3 (speed-type--seconds-to-minutes 180)))
-    (cl-assert (= 30 (speed-type--gross-wpm 450 180)))
-    (cl-assert (= 15 (speed-type--net-wpm 450 45 180)))
-    (cl-assert (= 85 (speed-type--accuracy 100 90 5)))
-    (cl-assert (string= "Beginner" (speed-type--skill 10)))
-    (cl-assert (string= "Pro" (speed-type--skill 45)))
-    (cl-assert (string= "Racer" (speed-type--skill 400))))
-  (speed-type--stats-tests)
-
-  (defun speed-type--url-tests ()
-    (cl-assert (string= "https://www.gutenberg.org/cache/epub/1/pg1.txt"
-                        (speed-type--gb-url 1))))
-  (speed-type--url-tests)
-
-  (defun speed-type--charfun-tests ()
-    (cl-assert (speed-type--check-same 0 "\nfoo\n" "\nfoo\n"))
-    (cl-assert (speed-type--check-same 1 "\nfoo\s" "\nfoo\n"))
-    (cl-assert (speed-type--check-same 4 "\nfoo\s" "\nfoo\t"))
-    (cl-assert (not (speed-type--check-same 2 "\nfoo\s" "\nfxo\n"))))
-  (speed-type--charfun-tests)
-
-  (defun speed-type--trim-tests ()
-    (cl-assert (string= "foo\n\t\sbar"
-                        (speed-type--trim "\n\nfoo\n\t\sbar\n\n\n")))
-    (cl-assert (string= "\tfoo\n\t\sbar"
-                        (speed-type--trim "\n\tfoo\n\t\sbar\n\n\n\n"))))
-  (speed-type--trim-tests))
 
 (provide 'speed-type)
 
