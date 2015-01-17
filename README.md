@@ -1,9 +1,18 @@
+[![MELPA](http://melpa.org/packages/speed-type-badge.svg)](http://melpa.org/#/speed-type)
+
 # speed-type
+
 Practice touch/speed typing in emacs
 
 ## Installation
 
-Put speed-type.el into a directory specified by the load-path variable. Alternatively, you can add a directory to the variable load-path by (add-to-list 'load-path "ADDITIONAL-DIRECTORY").
+Install speed-type from [MELPA](melpa.org) with:
+
+```
+M-x package-install RET speed-type
+```
+
+If you prefer to install by hand: Put speed-type.el into a directory specified by the load-path variable. Alternatively, you can add a directory to the variable load-path by (add-to-list 'load-path "ADDITIONAL-DIRECTORY").
 
 If you put the file in "~/.emacs.d/speed-type/speed-type.el" for instance, the following snipped in your .emacs file will load and init the extension.
 
