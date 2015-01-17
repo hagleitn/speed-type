@@ -1,6 +1,6 @@
-[![MELPA](http://melpa.org/packages/speed-type-badge.svg)](http://melpa.org/#/speed-type)
-
 # speed-type
+
+[![MELPA](http://melpa.org/packages/speed-type-badge.svg)](http://melpa.org/#/speed-type)
 
 Practice touch/speed typing in emacs
 
