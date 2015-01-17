@@ -4,6 +4,8 @@
 
 Practice touch/speed typing in emacs
 
+![Screenshot](https://raw.github.com/hagleitn/speed-type/master/speed-type-screen-shot.png)
+
 ## Installation
 
 Install speed-type from [MELPA](melpa.org) with:
