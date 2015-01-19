@@ -279,9 +279,10 @@ are color coded and stats are gathered about the typing performance."
     (setq speed-type--remaining (length text))
     (erase-buffer)
     (insert speed-type--orig-text)
-    (insert (propertize
-             (format "\n\n\n%s, by %s" speed-type--title speed-type--author)
-             'face 'italic))
+    (when speed-type--title
+      (insert (propertize
+               (format "\n\n\n%s, by %s" speed-type--title speed-type--author)
+               'face 'italic)))
     (not-modified)
     (switch-to-buffer buf)
     (goto-char 0)
@@ -321,11 +322,12 @@ are color coded and stats are gathered about the typing performance."
          (tries 20))
     (with-current-buffer (speed-type--gb-retrieve book-num)
       (goto-char 0)
+      (princ (speed-type--gb-retrieve book-num))
       (setq speed-type--title
-            (buffer-substring (goto-char (re-search-forward "^Title: "))
+            (buffer-substring (goto-char (re-search-forward "^Title: " nil t))
                               (line-end-position)))
       (setq speed-type--author
-            (buffer-substring (goto-char (re-search-forward "^Author: "))
+            (buffer-substring (goto-char (re-search-forward "^Author: " nil t))
                               (line-end-position)))
       (dotimes (i paragraph-num nil)
         (setq p (point))
