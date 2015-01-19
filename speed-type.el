@@ -170,10 +170,7 @@ Total errors:\t%d
 (make-variable-buffer-local 'speed-type--corrections)
 
 (defvar speed-type--title nil)
-;;(make-variable-buffer-local 'speed-type--title)
-
 (defvar speed-type--author nil)
-;;(make-variable-buffer-local 'speed-type--author)
 
 (defun speed-type--elapsed-time ()
   "Return float with the total time since start."
