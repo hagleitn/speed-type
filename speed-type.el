@@ -205,7 +205,8 @@ Total errors:\t%d
            speed-type--entries
            speed-type--errors
            speed-type--corrections
-           (speed-type--elapsed-time))))
+           (speed-type--elapsed-time)))
+  (read-only-mode))
 
 (defun speed-type--diff (orig new start end)
   "Update stats and buffer contents with result of changes in text."
