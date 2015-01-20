@@ -108,7 +108,7 @@ Total errors:\t%d
 %s")
 
 (defun speed-type--generate-stats (entries errors corrections seconds)
-  "Return string of statistics."
+  "Return string of statistics with the title and author."
   (format speed-type-stats-format
           (speed-type--skill (speed-type--net-wpm entries errors seconds))
           (speed-type--net-wpm entries errors seconds)
@@ -121,6 +121,7 @@ Total errors:\t%d
           corrections
           (+ errors corrections)
           speed-type-explaining-message))
+  
 
 (defvar speed-type--gb-url-format
   "https://www.gutenberg.org/cache/epub/%d/pg%d.txt")
@@ -206,11 +207,16 @@ Total errors:\t%d
   (remove-hook 'after-change-functions 'speed-type--change)
   (remove-hook 'first-change-hook 'speed-type--first-change)
   (goto-char (point-max))
+  (when (and speed-type--title speed-type--author)
+    (insert (propertize
+             (format "\n\n%s, by %s" speed-type--title speed-type--author)
+             'face 'italic)))
   (insert (speed-type--generate-stats
            speed-type--entries
            speed-type--errors
            speed-type--corrections
-           (speed-type--elapsed-time))))
+           (speed-type--elapsed-time)))
+  (read-only-mode))
 
 (defun speed-type--diff (orig new start end)
   "Update stats and buffer contents with result of changes in text."
@@ -228,7 +234,9 @@ Total errors:\t%d
                  (store-substring speed-type--mod-str pos0 2)))
         (cl-incf speed-type--entries)
         (cl-decf speed-type--remaining)
-        (add-face-text-property pos (1+ pos) `(:foreground ,color))))))
+	(if (fboundp 'add-face-text-property)
+	    (add-face-text-property pos (1+ pos) `(:foreground ,color))
+	  (add-text-properties pos (1+ pos) `(face (:foreground ,color))))))))
 
 (defun speed-type--change (start end length)
   "Handle buffer changes.
@@ -279,10 +287,6 @@ are color coded and stats are gathered about the typing performance."
     (setq speed-type--remaining (length text))
     (erase-buffer)
     (insert speed-type--orig-text)
-    (when (and speed-type--title speed-type--author)
-      (insert (propertize
-               (format "\n\n\n%s, by %s" speed-type--title speed-type--author)
-               'face 'italic)))
     (not-modified)
     (switch-to-buffer buf)
     (goto-char 0)
