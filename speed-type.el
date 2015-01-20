@@ -8,18 +8,20 @@
 ;; URL: https://github.com/hagleitn/speed-type
 ;; Package-Requires: ((cl-lib "0.3"))
 
-;; This program is free software; you can redistribute it and/or modify
+;; This file is NOT part of GNU Emacs.
+
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful,
+;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -119,6 +121,7 @@ Total errors:\t%d
           corrections
           (+ errors corrections)
           speed-type-explaining-message))
+  
 
 (defvar speed-type--gb-url-format
   "https://www.gutenberg.org/cache/epub/%d/pg%d.txt")
@@ -167,6 +170,9 @@ Total errors:\t%d
 (defvar speed-type--corrections 0)
 (make-variable-buffer-local 'speed-type--corrections)
 
+(defvar speed-type--title nil)
+(defvar speed-type--author nil)
+
 (defun speed-type--elapsed-time ()
   "Return float with the total time since start."
   (let ((end-time (float-time)))
@@ -201,6 +207,10 @@ Total errors:\t%d
   (remove-hook 'after-change-functions 'speed-type--change)
   (remove-hook 'first-change-hook 'speed-type--first-change)
   (goto-char (point-max))
+  (when (and speed-type--title speed-type--author)
+    (insert (propertize
+             (format "\n\n%s, by %s" speed-type--title speed-type--author)
+             'face 'italic)))
   (insert (speed-type--generate-stats
            speed-type--entries
            speed-type--errors
@@ -316,6 +326,12 @@ are color coded and stats are gathered about the typing performance."
          (tries 20))
     (with-current-buffer (speed-type--gb-retrieve book-num)
       (goto-char 0)
+      (when (re-search-forward "^Title: " nil t)
+        (setq speed-type--title
+              (buffer-substring (point) (line-end-position))))
+      (when (re-search-forward "^Author: " nil t)
+        (setq speed-type--author
+              (buffer-substring (point) (line-end-position))))
       (dotimes (i paragraph-num nil)
         (setq p (point))
         (if fwd (forward-paragraph)
