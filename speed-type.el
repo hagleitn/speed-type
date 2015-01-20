@@ -108,7 +108,7 @@ Total errors:\t%d
 %s")
 
 (defun speed-type--generate-stats (entries errors corrections seconds)
-  "Return string of statistics with the title and author."
+  "Return string of statistics."
   (format speed-type-stats-format
           (speed-type--skill (speed-type--net-wpm entries errors seconds))
           (speed-type--net-wpm entries errors seconds)
