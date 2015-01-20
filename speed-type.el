@@ -224,7 +224,9 @@ Total errors:\t%d
                  (store-substring speed-type--mod-str pos0 2)))
         (cl-incf speed-type--entries)
         (cl-decf speed-type--remaining)
-        (add-face-text-property pos (1+ pos) `(:foreground ,color))))))
+	(if (fboundp 'add-face-text-property)
+	    (add-face-text-property pos (1+ pos) `(:foreground ,color))
+	  (add-text-properties pos (1+ pos) `(face (:foreground ,color))))))))
 
 (defun speed-type--change (start end length)
   "Handle buffer changes.
