@@ -171,7 +171,10 @@ Total errors:\t%d
 (make-variable-buffer-local 'speed-type--corrections)
 
 (defvar speed-type--title nil)
+(make-variable-buffer-local 'speed-type--title)
+
 (defvar speed-type--author nil)
+(make-variable-buffer-local 'speed-type--author)
 
 (defun speed-type--elapsed-time ()
   "Return float with the total time since start."
@@ -208,8 +211,9 @@ Total errors:\t%d
   (remove-hook 'first-change-hook 'speed-type--first-change)
   (goto-char (point-max))
   (when (and speed-type--title speed-type--author)
+    (insert "\n\n")
     (insert (propertize
-             (format "\n\n%s, by %s" speed-type--title speed-type--author)
+             (format "%s, by %s" speed-type--title speed-type--author)
              'face 'italic)))
   (insert (speed-type--generate-stats
            speed-type--entries
@@ -272,7 +276,7 @@ are color coded and stats are gathered about the typing performance."
                             ""
                             str))
 
-(defun speed-type--setup (text)
+(defun speed-type--setup (text &optional author title)
   "Set up a new buffer for the typing exercise on TEXT."
   (with-temp-buffer
     (insert text)
@@ -290,6 +294,8 @@ are color coded and stats are gathered about the typing performance."
     (not-modified)
     (switch-to-buffer buf)
     (goto-char 0)
+    (setq speed-type--author author)
+    (setq speed-type--title title)
     (make-local-variable 'after-change-functions)
     (make-local-variable 'first-change-hook)
     (add-hook 'after-change-functions 'speed-type--change)
@@ -323,15 +329,15 @@ are color coded and stats are gathered about the typing performance."
                            (random speed-type--max-paragraphs)))
          (fwd t)
          (p (point))
-         (tries 20))
+         (tries 20)
+	 (author nil)
+	 (title nil))
     (with-current-buffer (speed-type--gb-retrieve book-num)
       (goto-char 0)
       (when (re-search-forward "^Title: " nil t)
-        (setq speed-type--title
-              (buffer-substring (point) (line-end-position))))
+        (setq title (buffer-substring (point) (line-end-position))))
       (when (re-search-forward "^Author: " nil t)
-        (setq speed-type--author
-              (buffer-substring (point) (line-end-position))))
+        (setq author (buffer-substring (point) (line-end-position))))
       (dotimes (i paragraph-num nil)
         (setq p (point))
         (if fwd (forward-paragraph)
@@ -356,7 +362,9 @@ are color coded and stats are gathered about the typing performance."
                 (t (setq tries 1))))
         (cl-decf tries))
       (when fwd (forward-char))
-      (speed-type-region (region-beginning) (region-end)))))
+      (speed-type--setup
+       (buffer-substring (region-beginning) (region-end))
+       author title))))
 
 (provide 'speed-type)
 
