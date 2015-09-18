@@ -87,22 +87,22 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
         ((< wpm 80) "Master")
         (t          "Racer")))
 
-(defvar speed-type-explaining-message "\n
+(defvar speed-type-explaining-message "
 Gross wpm/cpm ignore uncorrected errors and indicate raw speed.
 Net wpm/cpm take uncorrected errors into account and are a measure
 of effective or net speed.")
 
 (defvar speed-type-stats-format "\n
-Skill:\t\t%s
-Net WPM:\t%d
-Net CPM:\t%d
-Gross WPM:\t%d
-Gross CPM:\t%d
-Accuracy:\t%.2f%%
-Total time:\t%s
-Total chars:\t%d
-Corrections:\t%d
-Total errors:\t%d
+Skill:        %s
+Net WPM:      %d
+Net CPM:      %d
+Gross WPM:    %d
+Gross CPM:    %d
+Accuracy:     %.2f%%
+Total time:   %s
+Total chars:  %d
+Corrections:  %d
+Total errors: %d
 %s")
 
 (defun speed-type--generate-stats (entries errors corrections seconds)
