@@ -25,3 +25,33 @@
     (cl-assert (string= "\tfoo\n\t\sbar"
                         (speed-type--trim "\n\tfoo\n\t\sbar\n\n\n\n"))))
 
+(ert-deftest speed-type--remove-response-headers-from-java-samples-tests ()
+  "Removes unneeded response headers from the buffer whose contents are retrieved from an url"
+  (let ((buf (url-retrieve-synchronously (speed-type--java-url 0))))
+    (with-current-buffer buf
+      (speed-type--remove-response-headers-from-buffer)
+      (beginning-of-buffer)
+      (let ((first-line (thing-at-point 'line t)))
+        (cl-assert (or (string-prefix-p "import" first-line)
+                       (string-prefix-p "/*" first-line)
+                       (string-prefix-p "//" first-line)))))))
+
+(ert-deftest speed-type--narrow-java-samples-to-n-lines-after-class-declaration-tests ()
+  "Trims the Java sample to n lines after the class declaration"
+  (let ((buf (url-retrieve-synchronously (speed-type--java-url 0))))
+   (with-current-buffer buf
+      (speed-type--remove-response-headers-from-buffer)
+      (let ((orig-words (count-words (point-min) (point-max))))
+        (speed-type--narrow-java-buffer)
+        (cl-assert (and (<= 100 (count-words (point-min) (point-max)))
+                        (>= orig-words (count-words (point-min) (point-max)))))))))
+
+(ert-deftest speed-type--remove-java-comments-tests ()
+  "Removes the comments in Java samples"
+  (let ((buf (url-retrieve-synchronously (speed-type--java-url 0))))
+    (with-current-buffer buf
+      (speed-type--remove-response-headers-from-buffer)
+      (speed-type--remove-java-comments-in-buffer)
+      (beginning-of-buffer)
+      (message (format "** lines in buffer: %d" (count-matches "\n")))
+      (cl-assert (not (string-match-p "\\/\\*\\*" (buffer-string)))))))
