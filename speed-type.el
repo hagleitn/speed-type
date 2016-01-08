@@ -224,21 +224,29 @@ Total errors:\t%d
   "Update stats and buffer contents with result of changes in text."
   (let ((start0 (1- start))
         (end0 (1- end))
-        (color nil))
+        (correct nil))
     (dotimes (i (- end start) nil)
       (let ((pos0 (+ start0 i))
             (pos (+ start i)))
         (if (speed-type--check-same i orig new)
-            (progn (setq color "green")
+            (progn (setq correct t)
                    (store-substring speed-type--mod-str pos0 1))
           (progn (cl-incf speed-type--errors)
-                 (setq color "red")
                  (store-substring speed-type--mod-str pos0 2)))
         (cl-incf speed-type--entries)
         (cl-decf speed-type--remaining)
-	(if (fboundp 'add-face-text-property)
-	    (add-face-text-property pos (1+ pos) `(:foreground ,color))
-	  (add-text-properties pos (1+ pos) `(face (:foreground ,color))))))))
+        (speed-type--set-char-color pos correct)))))
+
+(defun speed-type--set-char-color (pos correct)
+  (let* ((syntax
+          (char-syntax (aref (buffer-substring pos (1+ pos)) 0)))
+         (attrs
+          (if (and (not correct) (= syntax ?\s))
+              '(:underline "red")
+            `(:underling nil :foreground ,(if correct "green" "red")))))
+    (if (fboundp 'add-face-text-property)
+        (add-face-text-property pos (1+ pos) attrs)
+      (add-text-properties pos (1+ pos) `(face ,@attrs)))))
 
 (defun speed-type--change (start end length)
   "Handle buffer changes.
