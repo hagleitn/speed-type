@@ -139,13 +139,19 @@ Total errors:\t%d
         (url-request-method "GET"))
     (if (file-readable-p fn)
         (find-file-noselect fn t)
-      (let ((buf (url-retrieve-synchronously (speed-type--gb-url book-num))))
+      (let ((buf (url-retrieve-synchronously (speed-type--gb-url book-num)))
+            (new-buf (generate-new-buffer "temp-speed-type")))
+        ;; decoding the buffer content must be done in a new buffer
+        ;; to work properly
         (with-current-buffer buf
           (delete-trailing-whitespace)
+          (decode-coding-region (point-min) (point-max) 'utf-8 new-buf))
+        (kill-buffer buf)
+        (with-current-buffer new-buf
           (when (not (file-exists-p dr))
             (make-directory dr))
           (write-file fn)
-          buf)))))
+          new-buf)))))
 
 (defvar speed-type--start-time nil)
 (make-variable-buffer-local 'speed-type--start-time)
