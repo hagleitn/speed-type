@@ -209,6 +209,24 @@ Total errors: %d
                             (cl-incf speed-type--corrections))))
       (store-substring speed-type--mod-str pos 0))))
 
+(defun speed-type--replay ()
+  (interactive)
+  (let ((text speed-type--orig-text))
+    (kill-this-buffer)
+    (speed-type--setup text)))
+
+(defun speed-type--play-next ()
+  (interactive)
+  (kill-this-buffer)
+  (speed-type-text))
+
+(defvar speed-type--completed-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") 'kill-this-buffer)
+    (define-key map (kbd "r") 'speed-type--replay)
+    (define-key map (kbd "n") 'speed-type--play-next)
+    map))
+
 (defun speed-type--handle-complete ()
   "Remove typing hooks from the buffer and print statistics."
   (remove-hook 'after-change-functions 'speed-type--change)
@@ -224,7 +242,15 @@ Total errors: %d
            speed-type--errors
            speed-type--corrections
            (speed-type--elapsed-time)))
-  (read-only-mode))
+  (insert "\n\n")
+  (insert (format "    [%s]uit\n"
+                  (propertize "q" 'face 'highlight)))
+  (insert (format "    [%s]eplay this sample\n"
+                  (propertize "r" 'face 'highlight)))
+  (insert (format "    [%s]ext random sample\n"
+                  (propertize "n" 'face 'highlight)))
+  (read-only-mode)
+  (use-local-map speed-type--completed-keymap))
 
 (defun speed-type--diff (orig new start end)
   "Update stats and buffer contents with result of changes in text."
