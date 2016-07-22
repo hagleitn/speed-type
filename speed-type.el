@@ -180,6 +180,9 @@ Total errors: %d
 (defvar speed-type--author nil)
 (make-variable-buffer-local 'speed-type--author)
 
+(defvar speed-type--opened-on-buffer nil)
+(make-variable-buffer-local 'speed-type--opened-on-buffer)
+
 (defun speed-type--elapsed-time ()
   "Return float with the total time since start."
   (let ((end-time (float-time)))
@@ -218,7 +221,9 @@ Total errors: %d
 (defun speed-type--play-next ()
   (interactive)
   (kill-this-buffer)
-  (speed-type-text))
+  (if speed-type--opened-on-buffer
+      (speed-type-buffer nil)
+    (speed-type-text)))
 
 (defvar speed-type--completed-keymap
   (let ((map (make-sparse-keymap)))
@@ -347,10 +352,17 @@ are color coded and stats are gathered about the typing performance."
   (speed-type--setup (buffer-substring-no-properties start end)))
 
 ;;;###autoload
-(defun speed-type-buffer ()
-  "Open copy of buffer contents in a new buffer to speed type the text."
-  (interactive)
-  (speed-type--setup (buffer-substring-no-properties (point-min) (point-max))))
+(defun speed-type-buffer (full)
+  "Open copy of buffer contents in a new buffer to speed type the text.
+
+If using a prefix while calling this function (C-u), then the full text
+will be used. Else some text will be picked randomly."
+  (interactive "P")
+  (setq speed-type--opened-on-buffer t)
+  (if full
+      (speed-type--setup (buffer-substring-no-properties
+                          (point-min) (point-max)))
+    (speed-type--setup (speed-type--pick-text-to-type))))
 
 (defvar speed-type--min-chars 200)
 (defvar speed-type--max-chars 450)

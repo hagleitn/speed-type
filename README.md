@@ -34,4 +34,7 @@ Executing M-x speed-type-text will start the typing exercise. A new buffer will 
 
 You can use any buffer or part of it to run speed-type. M-x speed-type-region and M-x speed-type-buffer will do the same thing as speed-type-text, except they take the text sample you've picked.
 
+speed-type-buffer by default will only take a random portion of the buffer - If
+you want the whole buffer, use C-u speed-type-buffer.
+
 Random samples are taken from Project Gutenberg. A small number of books will be downloaded on demand and stored in "~/emacs.d/speed-type". They will only be downloaded once.
