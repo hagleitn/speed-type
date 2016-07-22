@@ -344,13 +344,13 @@ are color coded and stats are gathered about the typing performance."
 (defun speed-type-region (start end)
   "Open copy of [START,END] in a new buffer to speed type the text."
   (interactive "r")
-  (speed-type--setup (buffer-substring start end)))
+  (speed-type--setup (buffer-substring-no-properties start end)))
 
 ;;;###autoload
 (defun speed-type-buffer ()
   "Open copy of buffer contents in a new buffer to speed type the text."
   (interactive)
-  (speed-type--setup (buffer-substring (point-min) (point-max))))
+  (speed-type--setup (buffer-substring-no-properties (point-min) (point-max))))
 
 (defvar speed-type--min-chars 200)
 (defvar speed-type--max-chars 450)
