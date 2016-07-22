@@ -2,13 +2,18 @@
 
 [![MELPA](http://melpa.org/packages/speed-type-badge.svg)](http://melpa.org/#/speed-type)
 
-Practice touch/speed typing in emacs
+Practice touch/speed typing in emacs.
+
+This is a fork, since the original maintainer does not seem to actively work on
+it. This fork fixes some things, and add some cool new stuff like utf-8 support
+and easy keybindings at the end of a run to play again or quit.
 
 ![Screenshot](https://raw.github.com/hagleitn/speed-type/master/speed-type-screen-shot.png)
 
 ## Installation
 
-Install speed-type from [MELPA](melpa.org) with:
+~~Install speed-type from [MELPA](melpa.org) with~~ (not working - you will
+install the original speed-type which is less featured):
 
 ```
 M-x package-install RET speed-type
