@@ -23,9 +23,9 @@
 
 ;;; Commentary:
 ;;
-;; Speed-type allows you to practice your touch typing skills. You can
+;; Speed-type allows you to practice your touch typing skills.  You can
 ;; test yourself by typing snippets from online books or use any piece
-;; of text or code you have in emacs. Speed-type keeps track of your
+;; of text or code you have in emacs.  Speed-type keeps track of your
 ;; stats (WPM, CPM, accuracy) while you are typing.
 
 ;;; Code:
@@ -354,55 +354,60 @@ are color coded and stats are gathered about the typing performance."
 
 (defvar speed-type--min-chars 200)
 (defvar speed-type--max-chars 450)
-(defvar speed-type--skip-paragraphs 30)
-(defvar speed-type--max-paragraphs 200)
+
+(defun speed-type--pick-text-to-type (&optional start end)
+  "Returns a random section of the buffer usable for playing
+
+START and END allow to limit to a buffer section - they default
+to (point-min) and (point-max)"
+  (unless start (setq start (point-min)))
+  (unless end (setq end (point-max)))
+  (save-excursion
+    (goto-char start)
+    (forward-paragraph
+     ;; count the paragraphs, and pick a random one
+     (random (let ((nb 0))
+               (while (< (point) end)
+                 (forward-paragraph)
+                 (setq nb (+ 1 nb)))
+               (goto-char start)
+               nb)))
+    (mark-paragraph)
+    ;; select more paragraphs until there are more than speed-type--min-chars
+    ;; chars in the selection
+    (while (and (< (mark) end)
+                (< (- (mark) (point)) speed-type--min-chars))
+      (mark-paragraph 1 t))
+    (exchange-point-and-mark)
+    ;; and remove sentences if we are above speed-type--max-chars
+    (let ((continue t)
+          (sentence-end-double-space nil)
+          (fwd nil))
+      (while (and (< (point) end)
+                  (> (- (point) (mark)) speed-type--max-chars)
+                  continue)
+        (setq continue (re-search-backward (sentence-end) (mark) t))
+        (when continue (setq fwd t)))
+      (when fwd (forward-char)))
+    (buffer-substring-no-properties (region-beginning) (region-end))))
 
 ;;;###autoload
 (defun speed-type-text ()
   "Setup a new text sample to practice touch or speed typing."
   (interactive)
-  (let* ((rand-num (random (length speed-type--gb-book-list)))
-         (book-num (nth rand-num speed-type--gb-book-list))
-         (paragraph-num (+ speed-type--skip-paragraphs
-                           (random speed-type--max-paragraphs)))
-         (fwd t)
-         (p (point))
-         (tries 20)
-	 (author nil)
-	 (title nil))
+  (let ((book-num (nth (random (length speed-type--gb-book-list))
+                       speed-type--gb-book-list))
+        (author nil)
+        (title nil))
     (with-current-buffer (speed-type--gb-retrieve book-num)
       (goto-char 0)
       (when (re-search-forward "^Title: " nil t)
         (setq title (buffer-substring (point) (line-end-position))))
       (when (re-search-forward "^Author: " nil t)
         (setq author (buffer-substring (point) (line-end-position))))
-      (dotimes (i paragraph-num nil)
-        (setq p (point))
-        (if fwd (forward-paragraph)
-          (backward-paragraph))
-        (when (= p (point))
-          (setq fwd (not fwd))))
-      (mark-paragraph)
-      (exchange-point-and-mark)
-      (setq fwd nil)
-      (while (> tries 0)
-        (let ((size (- (point) (mark))))
-          (cond ((< size speed-type--min-chars)
-                 (progn (forward-paragraph)
-                        (when fwd
-                          (forward-paragraph)
-                          (mark-paragraph)
-                          (exchange-point-and-mark))
-                        (setq fwd nil)))
-                ((> size speed-type--max-chars)
-                 (progn (search-backward "." (mark) t)
-                        (setq fwd t)))
-                (t (setq tries 1))))
-        (cl-decf tries))
-      (when fwd (forward-char))
-      (speed-type--setup
-       (buffer-substring (region-beginning) (region-end))
-       author title))))
+
+      (speed-type--setup (speed-type--pick-text-to-type (point))
+                         author title))))
 
 (provide 'speed-type)
 
