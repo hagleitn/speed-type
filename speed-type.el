@@ -239,10 +239,11 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
 
 (defun speed-type--play-next ()
   (interactive)
-  (kill-this-buffer)
-  (if speed-type--opened-on-buffer
-      (speed-type-buffer nil)
-    (speed-type-text)))
+  (let ((opened-on-buffer speed-type--opened-on-buffer))
+    (kill-this-buffer)
+    (if opened-on-buffer
+        (speed-type-buffer nil)
+      (speed-type-text))))
 
 (defun speed-type--handle-complete ()
   "Remove typing hooks from the buffer and print statistics."
@@ -406,11 +407,11 @@ to (point-min) and (point-max)"
 If using a prefix while calling this function (C-u), then the full text
 will be used. Else some text will be picked randomly."
   (interactive "P")
-  (setq speed-type--opened-on-buffer t)
   (if full
       (speed-type--setup (buffer-substring-no-properties
                           (point-min) (point-max)))
-    (speed-type--setup (speed-type--pick-text-to-type))))
+    (speed-type--setup (speed-type--pick-text-to-type))
+    (setq speed-type--opened-on-buffer t)))
 
 ;;;###autoload
 (defun speed-type-text ()
