@@ -107,6 +107,13 @@ Total errors: %d
 (defvar speed-type--opened-on-buffer nil)
 (make-variable-buffer-local 'speed-type--opened-on-buffer)
 
+;; save-mark-and-excursion in Emacs 25.1 and above works like save-excursion did before
+(eval-when-compile
+  (when (or
+         (< emacs-major-version 25)
+         (and (= emacs-major-version 25) (< emacs-minor-version 1)))
+    (defmacro save-mark-and-excursion (&rest body)
+`(save-excursion ,@body))))
 
 (defun speed-type--seconds-to-minutes (seconds)
   "Return minutes in float for SECONDS."
@@ -361,7 +368,7 @@ START and END allow to limit to a buffer section - they default
 to (point-min) and (point-max)"
   (unless start (setq start (point-min)))
   (unless end (setq end (point-max)))
-  (save-excursion
+  (save-mark-and-excursion
     (goto-char start)
     (forward-paragraph
      ;; count the paragraphs, and pick a random one
