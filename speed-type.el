@@ -300,7 +300,7 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
          (attrs
           (if (and (not correct) (= syntax ?\s))
               '(:underline "red")
-            `(:underling nil :foreground ,(if correct "green" "red")))))
+            `(:underline nil :foreground ,(if correct "green" "red")))))
     (if (fboundp 'add-face-text-property)
         (add-face-text-property pos (1+ pos) attrs)
       (add-text-properties pos (1+ pos) `(face ,@attrs)))))
