@@ -6,7 +6,7 @@
 ;; Maintainer: Julien Pagès <j.parkouss@gmail.com>
 ;; Version: 1.0
 ;; Keywords: games
-;; URL: https://github.com/hagleitn/speed-type
+;; URL: https://github.com/parkouss/speed-type
 ;; Package-Requires: ((cl-lib "0.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
