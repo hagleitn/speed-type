@@ -3,7 +3,8 @@
 ;; Copyright (C) 2015 Gunther Hagleitner
 
 ;; Author: Gunther Hagleitner
-;; Version: 0.1
+;; Maintainer: Julien Pagès <j.parkouss@gmail.com>
+;; Version: 1.0
 ;; Keywords: games
 ;; URL: https://github.com/hagleitn/speed-type
 ;; Package-Requires: ((cl-lib "0.3"))
