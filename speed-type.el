@@ -354,7 +354,7 @@ are color coded and stats are gathered about the typing performance."
     (setq speed-type--author author)
     (setq speed-type--title title)
     (insert text)
-    (not-modified)
+    (set-buffer-modified-p nil)
     (switch-to-buffer buf)
     (goto-char 0)
     (add-hook 'after-change-functions 'speed-type--change nil t)
