@@ -5,7 +5,7 @@ Practice touch/speed typing in emacs.
 This fork is now the official source for the speed-type package.
 Please open pull requests and issues here!
 
-![Screenshot](https://raw.github.com/hagleitn/speed-type/master/speed-type-screen-shot.png)
+![Screenshot](https://raw.github.com/parkouss/speed-type/master/speed-type-screen-shot.png)
 
 ## Installation
 
