@@ -34,17 +34,29 @@
 (require 'url)
 (require 'cl-lib)
 
-(defvar speed-type-min-chars 200
-  "the minimum number of chars to type required when the text to type
-is picked randomly.")
-(defvar speed-type-max-chars 450
-    "the maximum number of chars to type required when the text to type
-is picked randomly.")
-(defvar speed-type-gb-book-list
+(defgroup speed-type nil
+  "Practice touch-typing in emacs."
+  :group 'games)
+
+(defcustom speed-type-min-chars 200
+  "The minimum number of chars to type required when the text to type is picked randomly."
+  :group 'speed-type
+  :type 'integer)
+
+(defcustom speed-type-max-chars 450
+  "The maximum number of chars to type required when the text to type is picked randomly."
+  :group 'speed-type
+  :type 'integer)
+
+(defcustom speed-type-gb-book-list
   '(1342 11 1952 1661 74 1232 23 135 5200 2591 844 84 98 2701 1400 16328 174
          46 4300 345 1080 2500 829 1260 6130 1184 768 32032 521 1399 55)
-  "List of book numbers to use from the gutemberg web site. See
-speed-type--gb-url-format.")
+  "List of book numbers to use from the gutemberg web site.
+
+Book numbers can be picked from https://www.gutenberg.org, when looking at
+a book url.  E.G, https://www.gutenberg.org/ebooks/14577."
+  :group 'speed-type
+  :type '(repeat integer))
 
 ;; internal variables
 
