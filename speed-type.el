@@ -250,7 +250,8 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
   (let ((opened-on-buffer speed-type--opened-on-buffer))
     (kill-this-buffer)
     (if opened-on-buffer
-        (speed-type-buffer nil)
+        (with-current-buffer opened-on-buffer
+          (speed-type-buffer nil))
       (speed-type-text))))
 
 (defun speed-type--handle-complete ()
@@ -414,8 +415,9 @@ will be used. Else some text will be picked randomly."
   (if full
       (speed-type--setup (buffer-substring-no-properties
                           (point-min) (point-max)))
-    (speed-type--setup (speed-type--pick-text-to-type))
-    (setq speed-type--opened-on-buffer t)))
+    (let ((buf (current-buffer)))
+      (speed-type--setup (speed-type--pick-text-to-type))
+      (setq speed-type--opened-on-buffer buf))))
 
 ;;;###autoload
 (defun speed-type-text ()
