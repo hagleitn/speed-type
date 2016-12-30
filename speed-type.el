@@ -58,6 +58,16 @@ a book url.  E.G, https://www.gutenberg.org/ebooks/14577."
   :group 'speed-type
   :type '(repeat integer))
 
+(defface speed-type-correct
+  '((t :foreground "green"))
+  "Face for correctly typed characters."
+  :group 'speed-type)
+
+(defface speed-type-mistake
+  '((t :foreground "red" :underline "red"))
+  "Face for incorrectly typed characters."
+  :group 'speed-type)
+
 ;; internal variables
 
 (defvar speed-type--gb-url-format
@@ -308,19 +318,10 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
                  (store-substring speed-type--mod-str pos0 2)))
         (cl-incf speed-type--entries)
         (cl-decf speed-type--remaining)
-        (speed-type--set-char-color pos correct)))))
-
-(defun speed-type--set-char-color (pos correct)
-  "Change the face of the char at given POS given it is CORRECT or not."
-  (let* ((syntax
-          (char-syntax (aref (buffer-substring pos (1+ pos)) 0)))
-         (attrs
-          (if (and (not correct) (= syntax ?\s))
-              '(:underline "red")
-            `(:underline nil :foreground ,(if correct "green" "red")))))
-    (if (fboundp 'add-face-text-property)
-        (add-face-text-property pos (1+ pos) attrs)
-      (add-text-properties pos (1+ pos) `(face ,@attrs)))))
+        (add-text-properties pos (1+ pos)
+                             `(face ,(if correct
+                                         'speed-type-correct
+                                       'speed-type-mistake)))))))
 
 (defun speed-type--change (start end length)
   "Handle buffer changes.
