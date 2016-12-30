@@ -51,7 +51,7 @@
 (defcustom speed-type-gb-book-list
   '(1342 11 1952 1661 74 1232 23 135 5200 2591 844 84 98 2701 1400 16328 174
          46 4300 345 1080 2500 829 1260 6130 1184 768 32032 521 1399 55)
-  "List of book numbers to use from the gutemberg web site.
+  "List of book numbers to use from the gutenberg web site.
 
 Book numbers can be picked from https://www.gutenberg.org, when looking at
 a book url.  E.G, https://www.gutenberg.org/ebooks/14577."
@@ -361,7 +361,7 @@ are color coded and stats are gathered about the typing performance."
   "Set up a new buffer for the typing exercise on TEXT.
 
 AUTHOR and TITLE can be given, this happen when the text to type comes
-from a gutemberg book."
+from a gutenberg book."
   (with-temp-buffer
     (insert text)
     (delete-trailing-whitespace)
