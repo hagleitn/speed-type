@@ -26,7 +26,7 @@
 ;;
 ;; Speed-type allows you to practice your touch typing skills.  You can
 ;; test yourself by typing snippets from online books or use any piece
-;; of text or code you have in emacs.  Speed-type keeps track of your
+;; of text or code you have in Emacs.  Speed-type keeps track of your
 ;; stats (WPM, CPM, accuracy) while you are typing.
 
 ;;; Code:
@@ -229,7 +229,7 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
         0 (- end-time speed-type--start-time))))
 
 (defun speed-type--check-same (pos a b)
-  "Return true iff both A[POS] B[POS] are white space or if they are the same."
+  "Return true if both A[POS] B[POS] are white space or if they are the same."
   (let ((q (aref a pos))
         (p (aref b pos)))
     (or (and (= (char-syntax p) ?\s)
@@ -252,12 +252,14 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
       (store-substring speed-type--mod-str pos 0))))
 
 (defun speed-type--replay ()
+  "Replay a speed-type session."
   (interactive)
   (let ((text speed-type--orig-text))
     (kill-this-buffer)
     (speed-type--setup text)))
 
 (defun speed-type--play-next ()
+  "Play a new speed-type session, based on the current one."
   (interactive)
   (let ((opened-on-buffer speed-type--opened-on-buffer))
     (kill-this-buffer)
@@ -309,6 +311,7 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
         (speed-type--set-char-color pos correct)))))
 
 (defun speed-type--set-char-color (pos correct)
+  "Change the face of the char at given POS given it is CORRECT or not."
   (let* ((syntax
           (char-syntax (aref (buffer-substring pos (1+ pos)) 0)))
          (attrs
@@ -354,7 +357,10 @@ are color coded and stats are gathered about the typing performance."
                             str))
 
 (defun speed-type--setup (text &optional author title)
-  "Set up a new buffer for the typing exercise on TEXT."
+  "Set up a new buffer for the typing exercise on TEXT.
+
+AUTHOR and TITLE can be given, this happen when the text to type comes
+from a gutemberg book."
   (with-temp-buffer
     (insert text)
     (delete-trailing-whitespace)
@@ -376,7 +382,7 @@ are color coded and stats are gathered about the typing performance."
     (message "Timer will start when you type the first character.")))
 
 (defun speed-type--pick-text-to-type (&optional start end)
-  "Returns a random section of the buffer usable for playing
+  "Return a random section of the buffer usable for playing.
 
 START and END allow to limit to a buffer section - they default
 to (point-min) and (point-max)"
@@ -421,7 +427,7 @@ to (point-min) and (point-max)"
 (defun speed-type-buffer (full)
   "Open copy of buffer contents in a new buffer to speed type the text.
 
-If using a prefix while calling this function (C-u), then the full text
+If using a prefix while calling this function (C-u), then the FULL text
 will be used. Else some text will be picked randomly."
   (interactive "P")
   (if full
