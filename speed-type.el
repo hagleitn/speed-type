@@ -58,6 +58,11 @@ a book url.  E.G, https://www.gutenberg.org/ebooks/14577."
   :group 'speed-type
   :type '(repeat integer))
 
+(defcustom speed-type-gb-dir (locate-user-emacs-file "speed-type")
+  "Directory in which the gutenberg books will be saved."
+  :group 'speed-type
+  :type 'directory)
+
 (defface speed-type-correct
   '((t :foreground "green"))
   "Face for correctly typed characters."
@@ -213,8 +218,9 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
 
 (defun speed-type--gb-retrieve (book-num)
   "Return buffer with book number BOOK-NUM in it."
-  (let ((dr (locate-user-emacs-file (format "speed-type")))
-        (fn (locate-user-emacs-file (format "speed-type/%d.txt" book-num)))
+  (let ((dr speed-type-gb-dir)
+        (fn (concat (file-name-as-directory speed-type-gb-dir)
+                    (format "%d.txt" book-num)))
         (url-request-method "GET"))
     (if (file-readable-p fn)
         (find-file-noselect fn t)
