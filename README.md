@@ -27,6 +27,14 @@ following snipped in your .emacs file will load and init the extension.
 (require 'speed-type)
 ```
 
+## Configuration
+
+speed-type can be customized using:
+
+```
+M-x customize-group speed-type RET
+```
+
 ## Running speed-type
 
 Executing M-x speed-type-text will start the typing exercise. A new buffer will
