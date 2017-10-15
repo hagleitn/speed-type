@@ -8,7 +8,7 @@ Practice touch/speed typing in emacs
 
 ## Installation
 
-Install speed-type from [MELPA](melpa.org) with:
+Install speed-type from [MELPA](https://melpa.org) with:
 
 ```
 M-x package-install RET speed-type
