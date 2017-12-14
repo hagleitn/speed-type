@@ -7,7 +7,7 @@
 ;; Version: 1.0
 ;; Keywords: games
 ;; URL: https://github.com/parkouss/speed-type
-;; Package-Requires: ((cl-lib "0.3"))
+;; Package-Requires: ((emacs "24.3") (cl-lib "0.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
