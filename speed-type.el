@@ -32,6 +32,7 @@
 ;;; Code:
 
 (require 'url)
+(require 'url-handlers)
 (require 'cl-lib)
 
 (defgroup speed-type nil
@@ -223,20 +224,14 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
                     (format "%d.txt" book-num)))
         (url-request-method "GET"))
     (if (file-readable-p fn)
-        (find-file-noselect fn t)
-      (let ((buf (url-retrieve-synchronously (speed-type--gb-url book-num)))
-            (new-buf (generate-new-buffer "temp-speed-type")))
-        ;; decoding the buffer content must be done in a new buffer
-        ;; to work properly
-        (with-current-buffer buf
-          (delete-trailing-whitespace)
-          (decode-coding-region (point-min) (point-max) 'utf-8 new-buf))
-        (kill-buffer buf)
-        (with-current-buffer new-buf
-          (when (not (file-exists-p dr))
-            (make-directory dr))
-          (write-file fn)
-          new-buf)))))
+        fn
+      (url-copy-file (speed-type--gb-url book-num) fn)
+      (make-directory dr 'parents)
+      (with-temp-file fn
+        (insert-file-contents fn)
+        (delete-trailing-whitespace)
+        (decode-coding-region (point-min) (point-max) 'utf-8))
+      fn)))
 
 (defun speed-type--elapsed-time ()
   "Return float with the total time since start."
@@ -452,7 +447,8 @@ will be used. Else some text will be picked randomly."
                        speed-type-gb-book-list))
         (author nil)
         (title nil))
-    (with-current-buffer (speed-type--gb-retrieve book-num)
+    (with-temp-buffer
+      (insert-file-contents (speed-type--gb-retrieve book-num))
       (goto-char 0)
       (when (re-search-forward "^Title: " nil t)
         (setq title (buffer-substring (point) (line-end-position))))
