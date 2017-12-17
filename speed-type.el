@@ -219,14 +219,12 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
 
 (defun speed-type--gb-retrieve (book-num)
   "Return buffer with book number BOOK-NUM in it."
-  (let ((dr speed-type-gb-dir)
-        (fn (concat (file-name-as-directory speed-type-gb-dir)
-                    (format "%d.txt" book-num)))
+  (let ((fn (expand-file-name (format "%d.txt" book-num) speed-type-gb-dir))
         (url-request-method "GET"))
     (if (file-readable-p fn)
         fn
+      (make-directory speed-type-gb-dir 'parents)
       (url-copy-file (speed-type--gb-url book-num) fn)
-      (make-directory dr 'parents)
       (with-temp-file fn
         (insert-file-contents fn)
         (delete-trailing-whitespace)
