@@ -64,6 +64,19 @@ a book url.  E.G, https://www.gutenberg.org/ebooks/14577."
   :group 'speed-type
   :type 'directory)
 
+(defcustom speed-type-wordlist-urls
+  '((English . "http://web.archive.org/web/20170227200416/http://wortschatz.uni-leipzig.de/Papers/top10000en.txt")
+    (German . "http://web.archive.org/web/20170227200416/http://wortschatz.uni-leipzig.de/Papers/top10000de.txt")
+    (French . "http://web.archive.org/web/20170227200416/http://wortschatz.uni-leipzig.de/Papers/top10000fr.txt")
+    (Dutch . "http://web.archive.org/web/20170227200416/http://wortschatz.uni-leipzig.de/Papers/top10000nl.txt"))
+  "Alist of language name as key and a URL where to download a wordlist for it."
+  :type '(alist :key-type symbol :value-type string))
+
+(defcustom speed-type-default-lang nil
+  "Default language for training wordlists.  Ask when NIL."
+  :type '(choice (const :tag "None" nil)
+                 (symbol :tag "Language")))
+
 (defface speed-type-correct
   '((t :foreground "green"))
   "Face for correctly typed characters."
@@ -132,6 +145,12 @@ Total errors: %d
 
 (defvar speed-type--author nil)
 (make-variable-buffer-local 'speed-type--author)
+
+(defvar speed-type--lang nil)
+(make-variable-buffer-local 'speed-type--lang)
+
+(defvar speed-type--n-words nil)
+(make-variable-buffer-local 'speed-type--n-words)
 
 (defvar speed-type--opened-on-buffer nil)
 (make-variable-buffer-local 'speed-type--opened-on-buffer)
@@ -217,19 +236,29 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
   "Return url for BOOK-NUM."
   (format speed-type--gb-url-format book-num book-num))
 
-(defun speed-type--gb-retrieve (book-num)
-  "Return buffer with book number BOOK-NUM in it."
-  (let ((fn (expand-file-name (format "%d.txt" book-num) speed-type-gb-dir))
+(defun speed-type--retrieve (filename url)
+  "Return buffer FILENAME content in it or download from URL if file doesn't exist."
+  (let ((fn (expand-file-name (format "%s.txt" filename) speed-type-gb-dir))
         (url-request-method "GET"))
     (if (file-readable-p fn)
         fn
       (make-directory speed-type-gb-dir 'parents)
-      (url-copy-file (speed-type--gb-url book-num) fn)
+      (url-copy-file url fn)
       (with-temp-file fn
         (insert-file-contents fn)
         (delete-trailing-whitespace)
         (decode-coding-region (point-min) (point-max) 'utf-8))
       fn)))
+
+(defun speed-type--gb-retrieve (book-num)
+  "Return buffer with book number BOOK-NUM in it."
+  (speed-type--retrieve book-num  (speed-type--gb-url book-num)))
+
+(defun speed-type--wordlist-retrieve (lang)
+  "Return buffer with wordlist for language LANG in it."
+  (speed-type--retrieve lang (cdr (assoc lang speed-type-wordlist-urls))))
+
+(speed-type--wordlist-retrieve 'German)
 
 (defun speed-type--elapsed-time ()
   "Return float with the total time since start."
@@ -238,7 +267,7 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
         0 (- end-time speed-type--start-time))))
 
 (defun speed-type--check-same (pos a b)
-  "Return true if both A[POS] B[POS] are white space or if they are the same."
+  "Return non-nil if both A[POS] B[POS] are white space or if they are the same."
   (let ((q (aref a pos))
         (p (aref b pos)))
     (or (and (= (char-syntax p) ?\s)
@@ -270,23 +299,30 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
 (defun speed-type--play-next ()
   "Play a new speed-type session, based on the current one."
   (interactive)
-  (let ((opened-on-buffer speed-type--opened-on-buffer))
+  (let ((opened-on-buffer speed-type--opened-on-buffer)
+        (lang speed-type--lang)
+        (n speed-type--n-words))
     (kill-this-buffer)
     (if opened-on-buffer
         (with-current-buffer opened-on-buffer
           (speed-type-buffer nil))
-      (speed-type-text))))
+      (if (and lang n)
+          (let ((speed-type-default-lang lang))
+            (speed-type-top-x n))
+        (speed-type-text)))))
 
 (defun speed-type--handle-complete ()
   "Remove typing hooks from the buffer and print statistics."
   (remove-hook 'after-change-functions 'speed-type--change)
   (remove-hook 'first-change-hook 'speed-type--first-change)
   (goto-char (point-max))
-  (when (and speed-type--title speed-type--author)
+  (when speed-type--title
     (insert "\n\n")
-    (insert (propertize
-             (format "%s, by %s" speed-type--title speed-type--author)
-             'face 'italic)))
+    (insert (propertize speed-type--title 'face 'italic))
+    (when speed-type--author
+      (insert (propertize
+               (format ", by %s" speed-type--title speed-type--author)
+               'face 'italic))))
   (insert (speed-type--generate-stats
            speed-type--entries
            speed-type--errors
@@ -356,11 +392,15 @@ are color coded and stats are gathered about the typing performance."
                             ""
                             str))
 
-(defun speed-type--setup (text &optional author title)
+(defun speed-type--setup (text &optional author title lang n-words)
   "Set up a new buffer for the typing exercise on TEXT.
 
 AUTHOR and TITLE can be given, this happen when the text to type comes
-from a gutenberg book."
+from a gutenberg book.
+
+LANG and N-WORDS is used when training random words where LANG is the
+language symbol and N-WORDS is the top N words that should be trained.
+"
   (with-temp-buffer
     (insert text)
     (delete-trailing-whitespace)
@@ -373,6 +413,8 @@ from a gutenberg book."
     (setq speed-type--remaining len)
     (setq speed-type--author author)
     (setq speed-type--title title)
+    (setq speed-type--lang lang)
+    (setq speed-type--n-words n-words)
     (insert text)
     (set-buffer-modified-p nil)
     (switch-to-buffer buf)
@@ -416,6 +458,40 @@ to (point-min) and (point-max)"
         (when continue (setq fwd t)))
       (when fwd (forward-char)))
     (buffer-substring-no-properties (region-beginning) (region-end))))
+
+;;;###autoload
+(defun speed-type-top-x (n)
+  "Speed type the N most common words."
+  (interactive "nTrain X most common words: ")
+  (let* ((lang (or speed-type-default-lang
+                   (intern (completing-read "Language: " (mapcar 'car speed-type-wordlist-urls)))))
+         (file-path (speed-type--wordlist-retrieve lang))
+         (char-length (+ speed-type-min-chars
+                         (random (- speed-type-max-chars speed-type-min-chars))))
+         (words (with-temp-buffer
+                  (insert-file-contents file-path)
+                  (split-string (buffer-string) "\n" t)))
+         (n (min n (length words)))
+         (title (format "Top %s %s words" n lang)))
+    (speed-type--setup (with-temp-buffer
+                         (while (< (buffer-size) char-length)
+                           (insert (nth (random n) words))
+                           (insert " "))
+                         (fill-region (point-min) (point-max))
+                         (buffer-string))
+                       nil title lang n)))
+
+;;;###autoload
+(defun speed-type-top-100 ()
+  "Speed type the top 100 most common words."
+  (interactive)
+  (speed-type-top-x 100))
+
+;;;###autoload
+(defun speed-type-top-1000 ()
+  "Speed type the top 1000 most common words."
+  (interactive)
+  (speed-type-top-x 1000))
 
 ;;;###autoload
 (defun speed-type-region (start end)
