@@ -72,6 +72,16 @@ a book url.  E.G, https://www.gutenberg.org/ebooks/14577."
   "Alist of language name as key and a URL where to download a wordlist for it."
   :type '(alist :key-type symbol :value-type string))
 
+(defcustom speed-type-wordlist-transform nil
+  "Function to transform wordlist before starting the exercise.
+The function should take the `buffer-string' as argument and return
+the transformed string that is used for the speed type exercise.
+
+E.g. if you always want lowercase words, set:
+`(setq speed-type-wordlist-transform #'downcase)'"
+  :type '(choice (const :tag "None" nil)
+                 (function :tag "Transform function")))
+
 (defcustom speed-type-default-lang nil
   "Default language for training wordlists.  Ask when NIL."
   :type '(choice (const :tag "None" nil)
@@ -455,7 +465,9 @@ to (point-min) and (point-max)"
                            (insert (nth (random n) words))
                            (insert " "))
                          (fill-region (point-min) (point-max))
-                         (buffer-string))
+                         (if speed-type-wordlist-transform
+                             (funcall speed-type-wordlist-transform (buffer-string))
+                           (buffer-string)))
                        nil title lang n)))
 
 ;;;###autoload
