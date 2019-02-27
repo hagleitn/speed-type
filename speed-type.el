@@ -119,41 +119,18 @@ Total errors: %d
 
 ;; buffer local internal variables
 
-(defvar speed-type--start-time nil)
-(make-variable-buffer-local 'speed-type--start-time)
-
-(defvar speed-type--orig-text nil)
-(make-variable-buffer-local 'speed-type--orig-text)
-
-(defvar speed-type--entries 0)
-(make-variable-buffer-local 'speed-type--entries)
-
-(defvar speed-type--errors 0)
-(make-variable-buffer-local 'speed-type--errors)
-
-(defvar speed-type--remaining 0)
-(make-variable-buffer-local 'speed-type--remaining)
-
-(defvar speed-type--mod-str nil)
-(make-variable-buffer-local 'speed-type--mod-str)
-
-(defvar speed-type--corrections 0)
-(make-variable-buffer-local 'speed-type--corrections)
-
-(defvar speed-type--title nil)
-(make-variable-buffer-local 'speed-type--title)
-
-(defvar speed-type--author nil)
-(make-variable-buffer-local 'speed-type--author)
-
-(defvar speed-type--lang nil)
-(make-variable-buffer-local 'speed-type--lang)
-
-(defvar speed-type--n-words nil)
-(make-variable-buffer-local 'speed-type--n-words)
-
-(defvar speed-type--opened-on-buffer nil)
-(make-variable-buffer-local 'speed-type--opened-on-buffer)
+(defvar-local speed-type--start-time nil)
+(defvar-local speed-type--orig-text nil)
+(defvar-local speed-type--entries 0)
+(defvar-local speed-type--errors 0)
+(defvar-local speed-type--remaining 0)
+(defvar-local speed-type--mod-str nil)
+(defvar-local speed-type--corrections 0)
+(defvar-local speed-type--title nil)
+(defvar-local speed-type--author nil)
+(defvar-local speed-type--lang nil)
+(defvar-local speed-type--n-words nil)
+(defvar-local speed-type--opened-on-buffer nil)
 
 ;; save-mark-and-excursion in Emacs 25.1 and above works like save-excursion did before
 (eval-when-compile
@@ -161,7 +138,7 @@ Total errors: %d
          (< emacs-major-version 25)
          (and (= emacs-major-version 25) (< emacs-minor-version 1)))
     (defmacro save-mark-and-excursion (&rest body)
-`(save-excursion ,@body))))
+      `(save-excursion ,@body))))
 
 (defun speed-type--seconds-to-minutes (seconds)
   "Return minutes in float for SECONDS."
