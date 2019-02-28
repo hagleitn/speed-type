@@ -72,6 +72,16 @@ a book url.  E.G, https://www.gutenberg.org/ebooks/14577."
   "Alist of language name as key and a URL where to download a wordlist for it."
   :type '(alist :key-type symbol :value-type string))
 
+(defcustom speed-type-wordlist-transform nil
+  "Function to transform wordlist before starting the exercise.
+The function should take the `buffer-string' as argument and return
+the transformed string that is used for the speed type exercise.
+
+E.g. if you always want lowercase words, set:
+`(setq speed-type-wordlist-transform #'downcase)'"
+  :type '(choice (const :tag "None" nil)
+                 (function :tag "Transform function")))
+
 (defcustom speed-type-default-lang nil
   "Default language for training wordlists.  Ask when NIL."
   :type '(choice (const :tag "None" nil)
@@ -119,41 +129,18 @@ Total errors: %d
 
 ;; buffer local internal variables
 
-(defvar speed-type--start-time nil)
-(make-variable-buffer-local 'speed-type--start-time)
-
-(defvar speed-type--orig-text nil)
-(make-variable-buffer-local 'speed-type--orig-text)
-
-(defvar speed-type--entries 0)
-(make-variable-buffer-local 'speed-type--entries)
-
-(defvar speed-type--errors 0)
-(make-variable-buffer-local 'speed-type--errors)
-
-(defvar speed-type--remaining 0)
-(make-variable-buffer-local 'speed-type--remaining)
-
-(defvar speed-type--mod-str nil)
-(make-variable-buffer-local 'speed-type--mod-str)
-
-(defvar speed-type--corrections 0)
-(make-variable-buffer-local 'speed-type--corrections)
-
-(defvar speed-type--title nil)
-(make-variable-buffer-local 'speed-type--title)
-
-(defvar speed-type--author nil)
-(make-variable-buffer-local 'speed-type--author)
-
-(defvar speed-type--lang nil)
-(make-variable-buffer-local 'speed-type--lang)
-
-(defvar speed-type--n-words nil)
-(make-variable-buffer-local 'speed-type--n-words)
-
-(defvar speed-type--opened-on-buffer nil)
-(make-variable-buffer-local 'speed-type--opened-on-buffer)
+(defvar-local speed-type--start-time nil)
+(defvar-local speed-type--orig-text nil)
+(defvar-local speed-type--entries 0)
+(defvar-local speed-type--errors 0)
+(defvar-local speed-type--remaining 0)
+(defvar-local speed-type--mod-str nil)
+(defvar-local speed-type--corrections 0)
+(defvar-local speed-type--title nil)
+(defvar-local speed-type--author nil)
+(defvar-local speed-type--lang nil)
+(defvar-local speed-type--n-words nil)
+(defvar-local speed-type--opened-on-buffer nil)
 
 ;; save-mark-and-excursion in Emacs 25.1 and above works like save-excursion did before
 (eval-when-compile
@@ -161,7 +148,7 @@ Total errors: %d
          (< emacs-major-version 25)
          (and (= emacs-major-version 25) (< emacs-minor-version 1)))
     (defmacro save-mark-and-excursion (&rest body)
-`(save-excursion ,@body))))
+      `(save-excursion ,@body))))
 
 (defun speed-type--seconds-to-minutes (seconds)
   "Return minutes in float for SECONDS."
@@ -478,7 +465,9 @@ to (point-min) and (point-max)"
                            (insert (nth (random n) words))
                            (insert " "))
                          (fill-region (point-min) (point-max))
-                         (buffer-string))
+                         (if speed-type-wordlist-transform
+                             (funcall speed-type-wordlist-transform (buffer-string))
+                           (buffer-string)))
                        nil title lang n)))
 
 ;;;###autoload
